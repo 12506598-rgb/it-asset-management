@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>IT 자산 관리 대시보드</title>
+<style>
+  :root { --bg:#0f1116; --card:#161a22; --text:#e5e7eb; --muted:#9ca3af; --line:#2a2f3a; }
+  body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto; background:var(--bg); color:var(--text);}
+  .wrap { max-width:1100px; margin:32px auto; padding:0 16px; }
+  h1 { margin:0 0 8px; }
+  .sub { color:var(--muted); margin:0 0 24px; }
+  .toolbar { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:16px; }
+  input, select { background:#0b0e14; color:var(--text); border:1px solid var(--line); border-radius:8px; padding:10px 12px; }
+  table { width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--line); border-radius:12px; overflow:hidden; }
+  th, td { padding:12px; border-bottom:1px solid var(--line); text-align:left; }
+  th { background:#121620; color:#cfd5e1; font-weight:600; }
+  tr:hover { background:#0f1420; }
+  .badge { display:inline-block; padding:2px 8px; border-radius:999px; font-size:12px; border:1px solid var(--line); color:#d1d5db;}
+  .empty { color:var(--muted); text-align:center; padding:32px; }
+  .kpi { display:flex; gap:12px; margin:0 0 16px; flex-wrap:wrap; }
+  .kpi .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px 16px; }
+  .kpi .n { font-size:20px; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>💼 IT 자산 관리 대시보드</h1>
+  <p class="sub">GitHub Issues → JSON(액션) → GitHub Pages</p>
+
+  <div class="kpi">
+    <div class="card">총 자산 <div class="n" id="k-total">0</div></div>
+    <div class="card">사용 중 <div class="n" id="k-inuse">0</div></div>
+    <div class="card">재고 <div class="n" id="k-stock">0</div></div>
+    <div class="card">수리중 <div class="n" id="k-repair">0</div></div>
+    <div class="card">폐기 <div class="n" id="k-retired">0</div></div>
+  </div>
+
+  <div class="toolbar">
+    <input id="q" placeholder="검색: 제목/본문/담당자/모델명…" />
+    <select id="status">
+      <option value="">상태(라벨) 전체</option>
+      <option value="in-use">in-use</option>
+      <option value="stock">stock</option>
+      <option value="repair">repair</option>
+      <option value="retired">retired</option>
+      <option value="lost">lost</option>
+    </select>
+    <select id="state">
+      <option value="">이슈 상태 전체</option>
+      <option value="open">open</option>
+      <option value="closed">closed</option>
+    </select>
+  </div>
+
+  <table id="tbl">
+    <thead>
+      <tr>
+        <th style="width:72px">#</th>
+        <th>제목</th>
+        <th style="width:140px">라벨</th>
+        <th style="width:180px">담당자</th>
+        <th style="width:150px">구매일</th>
+        <th style="width:120px">상태</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+  <div class="empty" id="empty" style="display:none;">표시할 자산이 없습니다.</div>
+</div>
+
+<script>
+async function main(){
+  // Pages가 같은 폴더(/docs)를 루트로 보니 상대경로로 읽으면 됨
+  const res = await fetch('assets.json', {cache:'no-store'});
+  const issues = await res.json();
+
+  // KPI
+  document.getElementById('k-total').textContent   = issues.length;
+  const countBy = (label) => issues.filter(i => (i.labels||[]).map(x=>x.toLowerCase()).includes(label)).length;
+  document.getElementById('k-inuse').textContent   = countBy('in-use');
+  document.getElementById('k-stock').textContent   = countBy('stock');
+  document.getElementById('k-repair').textContent  = countBy('repair');
+  document.getElementById('k-retired').textContent = countBy('retired');
+
+  const tbody = document.querySelector('#tbl tbody');
+  const empty = document.getElementById('empty');
+
+  function render(){
+    const q = document.getElementById('q').value.trim().toLowerCase();
+    const st = document.getElementById('status').value;
+    const istate = document.getElementById('state').value;
+
+    const rows = issues.filter(i=>{
+      const labelHit = st ? (i.labels||[]).map(x=>x.toLowerCase()).includes(st) : true;
+      const stateHit = istate ? i.state === istate : true;
+      const hay = (i.title + ' ' + (i.body||'') + ' ' + (i.labels||[]).join(' ')).toLowerCase();
+      const qHit = q ? hay.includes(q) : true;
+      return labelHit && stateHit && qHit;
+    });
+
+    tbody.innerHTML = rows.map(i=>{
+      const labels = (i.labels||[]).map(l=>`<span class="badge">${l}</span>`).join(' ');
+      const m = (i.body||'').match(/담당자:\s*(.+)/);
+      const m2 = (i.body||'').match(/구매일:\s*([0-9\-\.\/]+)/);
+      return `<tr>
+        <td>${i.number}</td>
+        <td>${i.title}</td>
+        <td>${labels || '-'}</td>
+        <td>${m?m[1].trim():'-'}</td>
+        <td>${m2?m2[1].replace(/\./g,'-'):'-'}</td>
+        <td>${i.state}</td>
+      </tr>`;
+    }).join('');
+
+    empty.style.display = rows.length ? 'none' : 'block';
+  }
+
+  ['q','status','state'].forEach(id=>document.getElementById(id).addEventListener('input', render));
+  render();
+}
+main().catch(e=>{ console.error(e); document.getElementById('empty').style.display='block'; });
+</script>
+</body>
+</html>
