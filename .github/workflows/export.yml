@@ -2,12 +2,15 @@ name: Export Issues to JSON
 
 on:
   schedule:
-    - cron: "0 0 * * *"   # 매일 자정(UTC 기준)
+    - cron: "0 0 * * *"
   workflow_dispatch:
 
 jobs:
   export:
     runs-on: ubuntu-latest
+    permissions:            # ✅ 추가
+      contents: write       # 커밋/푸시 하려면 필요
+      issues: read          # 이슈 읽기
 
     steps:
       - name: Checkout
