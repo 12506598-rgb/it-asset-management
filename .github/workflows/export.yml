@@ -1,17 +1,20 @@
-.github/workflows/export.yml
 name: Export Issues to JSON
 
 on:
   schedule:
-    - cron: "0 0 * * *"   # 매일 자정 UTC 기준
+    - cron: "0 0 * * *"   # 매일 자정(UTC 기준)
   workflow_dispatch:
 
 jobs:
   export:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Ensure docs folder exists
+        run: mkdir -p docs
 
       - name: Export issues to JSON
         uses: peter-evans/issues-exporter@v2
@@ -27,5 +30,5 @@ jobs:
           git config user.name "github-actions"
           git config user.email "actions@github.com"
           git add docs/assets.json
-          git commit -m "Auto update assets report" || echo "No changes"
+          git commit -m "Auto update assets report" || echo "No changes to commit"
           git push
