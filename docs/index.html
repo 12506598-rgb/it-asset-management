@@ -16,11 +16,18 @@
   th, td { padding:12px; border-bottom:1px solid var(--line); text-align:left; }
   th { background:#121620; color:#cfd5e1; font-weight:600; }
   tr:hover { background:#0f1420; }
-  .badge { display:inline-block; padding:2px 8px; border-radius:999px; font-size:12px; border:1px solid var(--line); color:#d1d5db;}
   .empty { color:var(--muted); text-align:center; padding:32px; }
-  .kpi { display:flex; gap:12px; margin:0 0 16px; flex-wrap:wrap; }
-  .kpi .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px 16px; }
+  .kpi { display:flex; gap:12px; margin:0 0 12px; flex-wrap:wrap; }
+  .kpi .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px 16px; cursor:pointer; transition:background .15s, transform .1s, box-shadow .15s, border-color .15s; }
+  .kpi .card:hover { transform:translateY(-1px); }
+  .kpi .card.active { border-color:#4b5563; box-shadow:0 0 0 1px #4b5563; }
   .kpi .n { font-size:20px; font-weight:700; }
+
+  .summary { margin:0 0 16px; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px 16px; font-size:14px; color:var(--text); }
+  .summary h2 { margin:0 0 8px; font-size:15px; }
+  .summary table { width:100%; border-collapse:collapse; margin-top:4px; }
+  .summary th, .summary td { padding:6px 8px; border-bottom:1px solid var(--line); font-size:13px; }
+  .summary th { background:#121620; }
 </style>
 </head>
 <body>
@@ -30,16 +37,34 @@
 
   <!-- KPI 카드: 총 자산 / IN / OUT / 수리중 / 폐기 -->
   <div class="kpi">
-    <div class="card">총 자산 <div class="n" id="k-total">0</div></div>
-    <div class="card">IN <div class="n" id="k-in">0</div></div>
-    <div class="card">OUT <div class="n" id="k-out">0</div></div>
-    <div class="card">수리중 <div class="n" id="k-repair">0</div></div>
-    <div class="card">폐기 <div class="n" id="k-retired">0</div></div>
+    <div class="card" id="card-total">
+      총 자산
+      <div class="n" id="k-total">0</div>
+    </div>
+    <div class="card" id="card-in">
+      IN
+      <div class="n" id="k-in">0</div>
+    </div>
+    <div class="card" id="card-out">
+      OUT
+      <div class="n" id="k-out">0</div>
+    </div>
+    <div class="card" id="card-repair">
+      수리중
+      <div class="n" id="k-repair">0</div>
+    </div>
+    <div class="card" id="card-retired">
+      폐기
+      <div class="n" id="k-retired">0</div>
+    </div>
   </div>
+
+  <!-- KPI 클릭 시 표시되는 요약 영역 -->
+  <div class="summary" id="summary"></div>
 
   <!-- 검색 / 필터 영역 -->
   <div class="toolbar">
-    <input id="q" placeholder="검색: 모델명/본문/사용자/시리얼…" />
+    <input id="q" placeholder="검색: 구분/모델명/본문/사용자/시리얼…" />
     <select id="status">
       <option value="">상태(IN/OUT/수리/폐기) 전체</option>
       <option value="in">IN</option>
@@ -55,14 +80,15 @@
     </select>
   </div>
 
-  <!-- 자산 테이블: 모델명 / 시리얼 번호 / 사용자 / 구매일 / 상태 -->
+  <!-- 자산 테이블: 구분 / 모델명 / 시리얼 번호 / 사용자 / 구매일 / 상태 -->
   <table id="tbl">
     <thead>
       <tr>
         <th style="width:72px">#</th>
+        <th style="width:120px">구분</th>
         <th>모델명</th>
         <th style="width:180px">시리얼 번호</th>
-        <th style="width:180px">사용자</th>
+        <th style="width:160px">사용자</th>
         <th style="width:150px">구매일</th>
         <th style="width:120px">상태</th>
       </tr>
@@ -74,106 +100,73 @@
 
 <script>
 async function main(){
-  // Pages가 같은 폴더(/docs)를 루트로 보니 상대경로로 읽으면 됨
   const res = await fetch('assets.json', {cache:'no-store'});
   const issues = await res.json();
 
+  // ---------- 이슈 -> 자산 데이터 전처리 ----------
+  const assets = issues.map(i => {
+    const body = i.body || '';
+
+    // 라벨(소문자) 배열
+    const labels = (i.labels || []).map(x =>
+      (typeof x === 'string' ? x : (x.name || '')).toLowerCase()
+    );
+
+    // 상태 키(in/out/repair/retired/lost/none)
+    let stateKey = '';
+    if (labels.includes('in')) stateKey = 'in';
+    else if (labels.includes('out')) stateKey = 'out';
+    else if (labels.includes('repair')) stateKey = 'repair';
+    else if (labels.includes('retired')) stateKey = 'retired';
+    else if (labels.includes('lost')) stateKey = 'lost';
+    else stateKey = '';
+
+    // 구분(노트북/모니터 등) : "장비구분:" 또는 "구분:" 패턴
+    let mType = body.match(/장비구분:\s*(.+)/);
+    if (!mType) mType = body.match(/구분:\s*(.+)/);
+    const deviceType = mType ? mType[1].trim() : '-';
+
+    // 모델명 = 제목
+    const model = i.title;
+
+    // 시리얼 번호
+    const mSerial = body.match(/시리얼:\s*(.+)/);
+    const serial = mSerial ? mSerial[1].trim() : '-';
+
+    // 사용자: "사용자:" 또는 "담당자:"
+    let mUser = body.match(/사용자:\s*(.+)/);
+    if (!mUser) mUser = body.match(/담당자:\s*(.+)/);
+    const user = mUser ? mUser[1].trim() : '-';
+
+    // 구매일
+    const mBuy = body.match(/구매일:\s*([0-9\-\.\/]+)/);
+    const buy = mBuy ? mBuy[1].replace(/\./g,'-') : '-';
+
+    // 검색용 문자열
+    const searchHay = (deviceType + ' ' + model + ' ' + body + ' ' + labels.join(' ')).toLowerCase();
+
+    return {
+      number: i.number,
+      issueState: i.state,   // open/closed
+      labels,
+      stateKey,
+      deviceType,
+      model,
+      serial,
+      user,
+      buy,
+      searchHay
+    };
+  });
+
   // ---------- KPI 계산 ----------
-  document.getElementById('k-total').textContent = issues.length;
+  document.getElementById('k-total').textContent = assets.length;
 
-  const countBy = (label) =>
-    issues.filter(i => {
-      const labels = (i.labels || []).map(x =>
-        (typeof x === 'string' ? x : (x.name || '')).toLowerCase()
-      );
-      return labels.includes(label);
-    }).length;
-
-  // 라벨 이름 기준: in / out / repair / retired / lost
-  document.getElementById('k-in').textContent      = countBy('in');
-  document.getElementById('k-out').textContent     = countBy('out');
-  document.getElementById('k-repair').textContent  = countBy('repair');
-  document.getElementById('k-retired').textContent = countBy('retired');
+  const countByState = key => assets.filter(a => a.stateKey === key).length;
+  document.getElementById('k-in').textContent      = countByState('in');
+  document.getElementById('k-out').textContent     = countByState('out');
+  document.getElementById('k-repair').textContent  = countByState('repair');
+  document.getElementById('k-retired').textContent = countByState('retired');
 
   const tbody = document.querySelector('#tbl tbody');
-  const empty = document.getElementById('empty');
-
-  function render(){
-    const q      = document.getElementById('q').value.trim().toLowerCase();
-    const st     = document.getElementById('status').value;  // in / out / repair / retired / lost
-    const istate = document.getElementById('state').value;   // open / closed
-
-    const rows = issues.filter(i => {
-      const labels = (i.labels || []).map(x =>
-        (typeof x === 'string' ? x : (x.name || '')).toLowerCase()
-      );
-
-      const labelHit = st ? labels.includes(st) : true;
-      const stateHit = istate ? i.state === istate : true;
-
-      const hay = (
-        i.title + ' ' +
-        (i.body || '') + ' ' +
-        labels.join(' ')
-      ).toLowerCase();
-      const qHit = q ? hay.includes(q) : true;
-
-      return labelHit && stateHit && qHit;
-    });
-
-    tbody.innerHTML = rows.map(i => {
-      const body = i.body || '';
-
-      // 모델명 = 이슈 제목
-      const model = i.title;
-
-      // 시리얼 번호: "시리얼:" 패턴에서 추출
-      const mSerial = body.match(/시리얼:\s*(.+)/);
-      const serial = mSerial ? mSerial[1].trim() : '-';
-
-      // 사용자: "사용자:" 또는 기존 "담당자:" 패턴에서 추출
-      let mUser = body.match(/사용자:\s*(.+)/);
-      if (!mUser) mUser = body.match(/담당자:\s*(.+)/);
-      const user = mUser ? mUser[1].trim() : '-';
-
-      // 구매일
-      const mBuy = body.match(/구매일:\s*([0-9\-\.\/]+)/);
-      const buy  = mBuy ? mBuy[1].replace(/\./g,'-') : '-';
-
-      // 상태: 라벨에 따라 IN / OUT / 수리중 / 폐기 / 분실 표시
-      const labels = (i.labels || []).map(x =>
-        (typeof x === 'string' ? x : (x.name || '')).toLowerCase()
-      );
-      let state = '-';
-      if (labels.includes('in'))       state = 'IN';
-      else if (labels.includes('out')) state = 'OUT';
-      else if (labels.includes('repair'))   state = '수리중';
-      else if (labels.includes('retired'))  state = '폐기';
-      else if (labels.includes('lost'))     state = '분실';
-
-      return `<tr>
-        <td>${i.number}</td>
-        <td>${model}</td>
-        <td>${serial}</td>
-        <td>${user}</td>
-        <td>${buy}</td>
-        <td>${state}</td>
-      </tr>`;
-    }).join('');
-
-    empty.style.display = rows.length ? 'none' : 'block';
-  }
-
-  ['q','status','state'].forEach(id =>
-    document.getElementById(id).addEventListener('input', render)
-  );
-  render();
-}
-
-main().catch(e => {
-  console.error(e);
-  document.getElementById('empty').style.display='block';
-});
-</script>
-</body>
-</html>
+  const empty = document.getElementById('empty'
