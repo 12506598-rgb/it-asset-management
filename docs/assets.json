@@ -1,13 +1,49 @@
 [
   {
+    "id": 3703302487,
+    "number": 5,
+    "title": "ThinkPad T14",
+    "state": "open",
+    "created_at": "2025-12-07T09:30:05Z",
+    "updated_at": "2025-12-07T09:30:05Z",
+    "labels": [
+      "lost"
+    ],
+    "body": "구분: 노트북\n모델명: ThinkPad T14\n사용자: 이한서\n시리얼: 7Y2P9Q8\n구매일: 2024-03-15\n보증기간: 2027-03-14"
+  },
+  {
+    "id": 3703301857,
+    "number": 4,
+    "title": "U2725QE",
+    "state": "open",
+    "created_at": "2025-12-07T09:29:10Z",
+    "updated_at": "2025-12-07T09:29:20Z",
+    "labels": [
+      "out"
+    ],
+    "body": "구분: 모니터\n모델명: Dell U2725QE\n사용자: 김한나\n시리얼: 0M4D2H\n구매일: 2024-03-15\n보증기간: 2027-03-14\n상태: 사용 중"
+  },
+  {
+    "id": 3703300940,
+    "number": 3,
+    "title": "LG Gram 15",
+    "state": "open",
+    "created_at": "2025-12-07T09:27:50Z",
+    "updated_at": "2025-12-07T09:28:02Z",
+    "labels": [
+      "out"
+    ],
+    "body": "구분: 노트북\n모델명: LG Gram 15\n사용자: 김한나\n시리얼: 12SAA213\n구매일: 2024-03-15\n보증기간: 2027-03-14\n상태: 사용 중"
+  },
+  {
     "id": 3703290578,
     "number": 2,
     "title": "ThinkPad T14",
     "state": "open",
     "created_at": "2025-12-07T09:14:15Z",
-    "updated_at": "2025-12-07T09:14:15Z",
+    "updated_at": "2025-12-07T09:29:41Z",
     "labels": [
-      "out"
+      "repair"
     ],
     "body": "구분: 노트북\n모델명: ThinkPad T14\n사용자: 이한서\n시리얼: 7Y2P9Q4\n구매일: 2024-03-15\n보증기간: 2027-03-14\n상태: 사용 중"
   },
