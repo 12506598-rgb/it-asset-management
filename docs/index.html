@@ -169,4 +169,161 @@ async function main(){
   document.getElementById('k-retired').textContent = countByState('retired');
 
   const tbody = document.querySelector('#tbl tbody');
-  const empty = document.getElementById('empty'
+  const empty = document.getElementById('empty');
+  const summaryEl = document.getElementById('summary');
+
+  // ---------- 테이블 렌더 ----------
+  function renderTable(){
+    const q      = document.getElementById('q').value.trim().toLowerCase();
+    const st     = document.getElementById('status').value;   // in/out/repair/retired/lost
+    const istate = document.getElementById('state').value;    // open/closed
+
+    const rows = assets.filter(a => {
+      const labelHit = st ? (a.stateKey === st) : true;
+      const stateHit = istate ? (a.issueState === istate) : true;
+      const qHit     = q ? a.searchHay.includes(q) : true;
+      return labelHit && stateHit && qHit;
+    });
+
+    tbody.innerHTML = rows.map(a => {
+      let stateDisplay = '-';
+      if (a.stateKey === 'in') stateDisplay = 'IN';
+      else if (a.stateKey === 'out') stateDisplay = 'OUT';
+      else if (a.stateKey === 'repair') stateDisplay = '수리중';
+      else if (a.stateKey === 'retired') stateDisplay = '폐기';
+      else if (a.stateKey === 'lost') stateDisplay = '분실';
+
+      return `<tr>
+        <td>${a.number}</td>
+        <td>${a.deviceType}</td>
+        <td>${a.model}</td>
+        <td>${a.serial}</td>
+        <td>${a.user}</td>
+        <td>${a.buy}</td>
+        <td>${stateDisplay}</td>
+      </tr>`;
+    }).join('');
+
+    empty.style.display = rows.length ? 'none' : 'block';
+  }
+
+  // ---------- KPI 요약 렌더 ----------
+  function renderSummary(mode){
+    // mode: 'total' | 'in' | 'out' | 'repair' | 'retired'
+    let filtered = assets;
+    let title = '전체 자산 현황';
+
+    if (mode !== 'total') {
+      filtered = assets.filter(a => a.stateKey === mode);
+      if (mode === 'in') title = 'IN 자산 현황';
+      else if (mode === 'out') title = 'OUT 자산 현황';
+      else if (mode === 'repair') title = '수리중 자산 현황';
+      else if (mode === 'retired') title = '폐기 자산 현황';
+    }
+
+    // 구분별 집계
+    const map = {}; // {구분: {total,in,out,repair,retired,lost}}
+    filtered.forEach(a => {
+      const key = a.deviceType || '-';
+      if (!map[key]) {
+        map[key] = { total:0, in:0, out:0, repair:0, retired:0, lost:0 };
+      }
+      map[key].total++;
+      if (a.stateKey && map[key][a.stateKey] !== undefined) {
+        map[key][a.stateKey]++;
+      }
+    });
+
+    const types = Object.keys(map).sort();
+    if (!types.length) {
+      summaryEl.innerHTML = `<h2>${title}</h2><p style="color:var(--muted);margin:4px 0 0;">해당 조건에 해당하는 자산이 없습니다.</p>`;
+      return;
+    }
+
+    const rowsHtml = types.map(t => {
+      const s = map[t];
+      return `<tr>
+        <td>${t}</td>
+        <td style="text-align:right;">${s.total}</td>
+        <td style="text-align:right;">${s.in}</td>
+        <td style="text-align:right;">${s.out}</td>
+        <td style="text-align:right;">${s.repair}</td>
+        <td style="text-align:right;">${s.retired}</td>
+        <td style="text-align:right;">${s.lost}</td>
+      </tr>`;
+    }).join('');
+
+    summaryEl.innerHTML = `
+      <h2>${title}</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>구분</th>
+            <th style="width:70px;text-align:right;">전체</th>
+            <th style="width:70px;text-align:right;">IN</th>
+            <th style="width:70px;text-align:right;">OUT</th>
+            <th style="width:70px;text-align:right;">수리중</th>
+            <th style="width:70px;text-align:right;">폐기</th>
+            <th style="width:70px;text-align:right;">분실</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rowsHtml}
+        </tbody>
+      </table>
+    `;
+  }
+
+  // ---------- KPI 카드 active 설정 ----------
+  function setActiveCard(mode){
+    ['total','in','out','repair','retired'].forEach(m => {
+      const el = document.getElementById('card-' + m);
+      if (!el) return;
+      if (m === mode) el.classList.add('active');
+      else el.classList.remove('active');
+    });
+  }
+
+  // 이벤트 바인딩
+  ['q','status','state'].forEach(id =>
+    document.getElementById(id).addEventListener('input', renderTable)
+  );
+
+  document.getElementById('card-total').addEventListener('click', () => {
+    setActiveCard('total');
+    renderSummary('total');
+  });
+  document.getElementById('card-in').addEventListener('click', () => {
+    setActiveCard('in');
+    renderSummary('in');
+  });
+  document.getElementById('card-out').addEventListener('click', () => {
+    setActiveCard('out');
+    renderSummary('out');
+  });
+  document.getElementById('card-repair').addEventListener('click', () => {
+    setActiveCard('repair');
+    renderSummary('repair');
+  });
+  document.getElementById('card-retired').addEventListener('click', () => {
+    setActiveCard('retired');
+    renderSummary('retired');
+  });
+
+  // 초기 렌더
+  renderTable();
+  setActiveCard('total');
+  renderSummary('total');
+}
+
+main().catch(e => {
+  console.error(e);
+  document.getElementById('empty').style.display='block';
+  const summaryEl = document.getElementById('summary');
+  if (summaryEl) {
+    summaryEl.innerHTML = '<p style="color:var(--muted);margin:0;">데이터를 불러오는 중 오류가 발생했습니다.</p>';
+  }
+});
+</script>
+</body>
+</html>
