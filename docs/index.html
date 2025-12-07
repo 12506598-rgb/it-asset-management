@@ -35,7 +35,7 @@
   <h1>💼 IT 자산 관리 대시보드</h1>
   <p class="sub">GitHub Issues → JSON(액션) → GitHub Pages</p>
 
-  <!-- KPI 카드: 총 자산 / IN / OUT / 수리중 / 폐기 -->
+  <!-- KPI 카드 -->
   <div class="kpi">
     <div class="card" id="card-total">
       총 자산
@@ -59,10 +59,10 @@
     </div>
   </div>
 
-  <!-- KPI 클릭 시 표시되는 요약 영역 -->
+  <!-- KPI 클릭 요약 -->
   <div class="summary" id="summary"></div>
 
-  <!-- 검색 / 필터 영역 -->
+  <!-- 검색 / 필터 -->
   <div class="toolbar">
     <input id="q" placeholder="검색: 구분/모델명/본문/사용자/시리얼…" />
     <select id="status">
@@ -80,7 +80,7 @@
     </select>
   </div>
 
-  <!-- 자산 테이블: 구분 / 모델명 / 시리얼 번호 / 사용자 / 구매일 / 상태 -->
+  <!-- 자산 테이블 -->
   <table id="tbl">
     <thead>
       <tr>
@@ -103,37 +103,36 @@ async function main(){
   const res = await fetch('assets.json', {cache:'no-store'});
   const issues = await res.json();
 
-  // ---------- 이슈 -> 자산 데이터 전처리 ----------
-  const assets = issues.map(i => {
+  // ---------- 이슈 -> 자산 데이터로 변환 (모든 이슈 1:1 반영) ----------
+  const assets = [];
+  for (const i of issues) {
     const body = i.body || '';
 
-    // 라벨(소문자) 배열
     const labels = (i.labels || []).map(x =>
       (typeof x === 'string' ? x : (x.name || '')).toLowerCase()
     );
 
-    // 상태 키(in/out/repair/retired/lost/none)
+    // 상태 키
     let stateKey = '';
     if (labels.includes('in')) stateKey = 'in';
     else if (labels.includes('out')) stateKey = 'out';
     else if (labels.includes('repair')) stateKey = 'repair';
     else if (labels.includes('retired')) stateKey = 'retired';
     else if (labels.includes('lost')) stateKey = 'lost';
-    else stateKey = '';
 
-    // 구분(노트북/모니터 등) : "장비구분:" 또는 "구분:" 패턴
+    // 구분
     let mType = body.match(/장비구분:\s*(.+)/);
     if (!mType) mType = body.match(/구분:\s*(.+)/);
     const deviceType = mType ? mType[1].trim() : '-';
 
     // 모델명 = 제목
-    const model = i.title;
+    const model = i.title || '-';
 
-    // 시리얼 번호
+    // 시리얼
     const mSerial = body.match(/시리얼:\s*(.+)/);
     const serial = mSerial ? mSerial[1].trim() : '-';
 
-    // 사용자: "사용자:" 또는 "담당자:"
+    // 사용자
     let mUser = body.match(/사용자:\s*(.+)/);
     if (!mUser) mUser = body.match(/담당자:\s*(.+)/);
     const user = mUser ? mUser[1].trim() : '-';
@@ -142,12 +141,11 @@ async function main(){
     const mBuy = body.match(/구매일:\s*([0-9\-\.\/]+)/);
     const buy = mBuy ? mBuy[1].replace(/\./g,'-') : '-';
 
-    // 검색용 문자열
     const searchHay = (deviceType + ' ' + model + ' ' + body + ' ' + labels.join(' ')).toLowerCase();
 
-    return {
+    assets.push({
       number: i.number,
-      issueState: i.state,   // open/closed
+      issueState: i.state,
       labels,
       stateKey,
       deviceType,
@@ -156,12 +154,11 @@ async function main(){
       user,
       buy,
       searchHay
-    };
-  });
+    });
+  }
 
-  // ---------- KPI 계산 ----------
+  // ---------- KPI ----------
   document.getElementById('k-total').textContent = assets.length;
-
   const countByState = key => assets.filter(a => a.stateKey === key).length;
   document.getElementById('k-in').textContent      = countByState('in');
   document.getElementById('k-out').textContent     = countByState('out');
@@ -187,11 +184,11 @@ async function main(){
 
     tbody.innerHTML = rows.map(a => {
       let stateDisplay = '-';
-      if (a.stateKey === 'in') stateDisplay = 'IN';
-      else if (a.stateKey === 'out') stateDisplay = 'OUT';
+      if (a.stateKey === 'in')      stateDisplay = 'IN';
+      else if (a.stateKey === 'out')    stateDisplay = 'OUT';
       else if (a.stateKey === 'repair') stateDisplay = '수리중';
-      else if (a.stateKey === 'retired') stateDisplay = '폐기';
-      else if (a.stateKey === 'lost') stateDisplay = '분실';
+      else if (a.stateKey === 'retired')stateDisplay = '폐기';
+      else if (a.stateKey === 'lost')   stateDisplay = '분실';
 
       return `<tr>
         <td>${a.number}</td>
@@ -207,9 +204,8 @@ async function main(){
     empty.style.display = rows.length ? 'none' : 'block';
   }
 
-  // ---------- KPI 요약 렌더 ----------
+  // ---------- 요약(KPI 클릭) ----------
   function renderSummary(mode){
-    // mode: 'total' | 'in' | 'out' | 'repair' | 'retired'
     let filtered = assets;
     let title = '전체 자산 현황';
 
@@ -221,18 +217,15 @@ async function main(){
       else if (mode === 'retired') title = '폐기 자산 현황';
     }
 
-    // 구분별 집계
-    const map = {}; // {구분: {total,in,out,repair,retired,lost}}
-    filtered.forEach(a => {
+    const map = {};
+    for (const a of filtered) {
       const key = a.deviceType || '-';
-      if (!map[key]) {
-        map[key] = { total:0, in:0, out:0, repair:0, retired:0, lost:0 };
-      }
+      if (!map[key]) map[key] = { total:0, in:0, out:0, repair:0, retired:0, lost:0 };
       map[key].total++;
       if (a.stateKey && map[key][a.stateKey] !== undefined) {
         map[key][a.stateKey]++;
       }
-    });
+    }
 
     const types = Object.keys(map).sort();
     if (!types.length) {
@@ -267,14 +260,11 @@ async function main(){
             <th style="width:70px;text-align:right;">분실</th>
           </tr>
         </thead>
-        <tbody>
-          ${rowsHtml}
-        </tbody>
+        <tbody>${rowsHtml}</tbody>
       </table>
     `;
   }
 
-  // ---------- KPI 카드 active 설정 ----------
   function setActiveCard(mode){
     ['total','in','out','repair','retired'].forEach(m => {
       const el = document.getElementById('card-' + m);
@@ -284,30 +274,25 @@ async function main(){
     });
   }
 
-  // 이벤트 바인딩
+  // 이벤트
   ['q','status','state'].forEach(id =>
     document.getElementById(id).addEventListener('input', renderTable)
   );
 
   document.getElementById('card-total').addEventListener('click', () => {
-    setActiveCard('total');
-    renderSummary('total');
+    setActiveCard('total'); renderSummary('total');
   });
   document.getElementById('card-in').addEventListener('click', () => {
-    setActiveCard('in');
-    renderSummary('in');
+    setActiveCard('in'); renderSummary('in');
   });
   document.getElementById('card-out').addEventListener('click', () => {
-    setActiveCard('out');
-    renderSummary('out');
+    setActiveCard('out'); renderSummary('out');
   });
   document.getElementById('card-repair').addEventListener('click', () => {
-    setActiveCard('repair');
-    renderSummary('repair');
+    setActiveCard('repair'); renderSummary('repair');
   });
   document.getElementById('card-retired').addEventListener('click', () => {
-    setActiveCard('retired');
-    renderSummary('retired');
+    setActiveCard('retired'); renderSummary('retired');
   });
 
   // 초기 렌더
@@ -320,9 +305,7 @@ main().catch(e => {
   console.error(e);
   document.getElementById('empty').style.display='block';
   const summaryEl = document.getElementById('summary');
-  if (summaryEl) {
-    summaryEl.innerHTML = '<p style="color:var(--muted);margin:0;">데이터를 불러오는 중 오류가 발생했습니다.</p>';
-  }
+  if (summaryEl) summaryEl.innerHTML = '<p style="color:var(--muted);margin:0;">데이터를 불러오는 중 오류가 발생했습니다.</p>';
 });
 </script>
 </body>
