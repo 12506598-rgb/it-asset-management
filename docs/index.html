@@ -27,9 +27,9 @@
     padding:0 16px;
   }
 
-  h1 { margin:0 0 8px; }
-  .sub { color:var(--muted); margin:0 0 24px; }
+  h1 { margin:0 0 24px; }
 
+  /* KPI */
   .kpi {
     display:flex;
     gap:12px;
@@ -44,17 +44,10 @@
     padding:12px 16px;
     min-width:110px;
     cursor:pointer;
-    transition: transform .08s ease, border-color .15s ease, box-shadow .15s ease;
-    user-select:none;
   }
-  .kpi .card:hover {
-    transform: translateY(-1px);
-    border-color:#3a4354;
-    box-shadow: 0 8px 30px rgba(0,0,0,.25);
-  }
-  .kpi .card.active{
+  .kpi .card.active {
     border-color:#4b5563;
-    box-shadow: 0 0 0 1px #4b5563;
+    box-shadow:0 0 0 1px #4b5563;
   }
 
   .kpi .n {
@@ -62,6 +55,7 @@
     font-weight:700;
   }
 
+  /* 요약 */
   .summary{
     margin: 0 0 16px;
     background: var(--card);
@@ -82,18 +76,14 @@
     padding:8px 10px;
     border-bottom:1px solid var(--line);
     font-size:13px;
-    text-align:left;
   }
   .summary th{
     background:#121620;
-    color:#cfd5e1;
     font-weight:600;
   }
-  .summary td.num, .summary th.num{
-    text-align:right;
-    width:72px;
-  }
+  .num { text-align:right; }
 
+  /* 필터 */
   .toolbar {
     display:flex;
     gap:12px;
@@ -109,6 +99,7 @@
     padding:10px 12px;
   }
 
+  /* 테이블 */
   table {
     width:100%;
     border-collapse:collapse;
@@ -121,24 +112,27 @@
   th, td {
     padding:12px;
     border-bottom:1px solid var(--line);
-    text-align:left;
   }
 
   th {
     background:#121620;
-    color:#cfd5e1;
     font-weight:600;
   }
 
   tr:hover { background:#0f1420; }
 
+  /* 상태 배지 */
   .badge {
-    display:inline-block;
-    padding:2px 8px;
+    padding:3px 10px;
     border-radius:999px;
     font-size:12px;
-    border:1px solid var(--line);
+    font-weight:600;
+    color:#fff;
   }
+  .in { background:#16a34a; }       /* 초록 */
+  .out { background:#f97316; }      /* 주황 */
+  .repair { background:#6b7280; }   /* 회색 */
+  .retired { background:#dc2626; }  /* 빨강 */
 
   .btn {
     padding:6px 10px;
@@ -148,10 +142,6 @@
     color:var(--text);
     cursor:pointer;
     font-size:12px;
-  }
-
-  .btn:hover {
-    background:#141a2a;
   }
 
   .empty {
@@ -165,7 +155,6 @@
 <body>
 <div class="wrap">
   <h1>IT 자산 관리 대시보드</h1>
-  <p class="sub">GitHub Issues → JSON → GitHub Pages</p>
 
   <!-- KPI -->
   <div class="kpi">
@@ -176,12 +165,12 @@
     <div class="card" id="card-retired">폐기<div class="n" id="k-retired">0</div></div>
   </div>
 
-  <!-- 요약(자산 현황) -->
+  <!-- 요약 -->
   <div class="summary" id="summary"></div>
 
-  <!-- 검색 / 필터 -->
+  <!-- 필터 -->
   <div class="toolbar">
-    <input id="q" placeholder="검색: 구분/모델명/본문/사용자…" />
+    <input id="q" placeholder="검색" />
     <select id="status">
       <option value="">상태 전체</option>
       <option value="in">IN</option>
@@ -195,14 +184,8 @@
   <table>
     <thead>
       <tr>
-        <th>#</th>
-        <th>구분</th>
-        <th>모델명</th>
-        <th>시리얼</th>
-        <th>사용자</th>
-        <th>구매일</th>
-        <th>상태</th>
-        <th>바코드</th>
+        <th>#</th><th>구분</th><th>모델명</th><th>시리얼</th>
+        <th>사용자</th><th>구매일</th><th>상태</th><th>인쇄</th>
       </tr>
     </thead>
     <tbody id="tbody"></tbody>
@@ -216,212 +199,95 @@ async function main(){
   const res = await fetch('assets.json', {cache:'no-store'});
   const issues = await res.json();
 
-  const assets = issues.map(i => {
-    const body = i.body || '';
-    const labels = (i.labels || []).map(l => l.toLowerCase());
+  const assets = issues.map(i=>{
+    const body=i.body||'';
+    const labels=(i.labels||[]).map(l=>l.toLowerCase());
+    let state='';
+    if(labels.includes('in')) state='IN';
+    else if(labels.includes('out')) state='OUT';
+    else if(labels.includes('repair')) state='수리중';
+    else if(labels.includes('retired')) state='폐기';
 
-    let state = '';
-    if (labels.includes('in')) state = 'IN';
-    else if (labels.includes('out')) state = 'OUT';
-    else if (labels.includes('repair')) state = '수리중';
-    else if (labels.includes('retired')) state = '폐기';
-
-    const pick = r => {
-      const m = body.match(r);
-      return m ? m[1].trim() : '-';
-    };
-
+    const pick=r=>(body.match(r)?.[1]||'-').trim();
     return {
-      number: i.number,
-      type: pick(/구분:\s*(.+)/),
-      model: i.title || '-',
-      serial: pick(/시리얼:\s*(.+)/),
-      user: pick(/사용자:\s*(.+)/),
-      buy: pick(/구매일:\s*([0-9\-\.]+)/).replace(/\./g,'-'),
-      state,
-      hay: (body + ' ' + (i.title || '')).toLowerCase()
+      number:i.number,
+      type:pick(/구분:\s*(.+)/),
+      model:i.title,
+      serial:pick(/시리얼:\s*(.+)/),
+      user:pick(/사용자:\s*(.+)/),
+      buy:pick(/구매일:\s*([0-9\-\.]+)/).replace(/\./g,'-'),
+      state
     };
   });
 
   // KPI
-  document.getElementById('k-total').textContent = assets.length;
-  document.getElementById('k-in').textContent = assets.filter(a=>a.state==='IN').length;
-  document.getElementById('k-out').textContent = assets.filter(a=>a.state==='OUT').length;
-  document.getElementById('k-repair').textContent = assets.filter(a=>a.state==='수리중').length;
-  document.getElementById('k-retired').textContent = assets.filter(a=>a.state==='폐기').length;
+  k('k-total',assets.length);
+  k('k-in',assets.filter(a=>a.state==='IN').length);
+  k('k-out',assets.filter(a=>a.state==='OUT').length);
+  k('k-repair',assets.filter(a=>a.state==='수리중').length);
+  k('k-retired',assets.filter(a=>a.state==='폐기').length);
 
-  const tbody = document.getElementById('tbody');
-  const empty = document.getElementById('empty');
-  const summaryEl = document.getElementById('summary');
+  const tbody=g('tbody'), empty=g('empty'), summary=g('summary');
 
-  function stateToKey(s){
-    if (s === 'IN') return 'in';
-    if (s === 'OUT') return 'out';
-    if (s === '수리중') return 'repair';
-    if (s === '폐기') return 'retired';
-    return '';
-  }
+  function renderSummary(mode){
+    let title='전체 자산 현황';
+    let cols=['IN','OUT','수리중','폐기'];
+    let list=assets;
 
-  // 테이블 렌더
-  function renderTable(){
-    const q = document.getElementById('q').value.toLowerCase();
-    const st = document.getElementById('status').value;
+    if(mode!=='total'){
+      title=mode.toUpperCase()+' 자산 현황';
+      cols=[mode.toUpperCase()];
+      list=assets.filter(a=>a.state===cols[0]);
+    }
 
-    const rows = assets.filter(a=>{
-      return (!q || a.hay.includes(q)) &&
-             (!st || stateToKey(a.state) === st);
+    const map={};
+    list.forEach(a=>{
+      map[a.type]=map[a.type]||{count:0};
+      map[a.type].count++;
     });
 
-    tbody.innerHTML = rows.map(a=>`
-      <tr>
-        <td>${a.number}</td>
-        <td>${escapeHtml(a.type)}</td>
-        <td>${escapeHtml(a.model)}</td>
-        <td>${escapeHtml(a.serial)}</td>
-        <td>${escapeHtml(a.user)}</td>
-        <td>${escapeHtml(a.buy)}</td>
-        <td><span class="badge">${escapeHtml(a.state)}</span></td>
-        <td>
-          <button class="btn" onclick="printAsset('${escapeAttr(a.model)}','${escapeAttr(a.serial)}','${escapeAttr(a.user)}','${escapeAttr(a.buy)}')">
-            인쇄
-          </button>
-        </td>
-      </tr>
-    `).join('');
-
-    empty.style.display = rows.length ? 'none' : 'block';
-  }
-
-  // 요약(구분별 집계)
-  function renderSummary(mode){
-    // mode: total | in | out | repair | retired
-    let filtered = assets;
-    let title = '전체 자산 현황';
-    if (mode && mode !== 'total') {
-      filtered = assets.filter(a => stateToKey(a.state) === mode);
-      if (mode === 'in') title = 'IN 자산 현황';
-      if (mode === 'out') title = 'OUT 자산 현황';
-      if (mode === 'repair') title = '수리중 자산 현황';
-      if (mode === 'retired') title = '폐기 자산 현황';
-    }
-
-    const byType = {};
-    for (const a of filtered){
-      const t = a.type || '-';
-      if (!byType[t]) byType[t] = { total:0, in:0, out:0, repair:0, retired:0 };
-      byType[t].total++;
-      const k = stateToKey(a.state);
-      if (k && byType[t][k] !== undefined) byType[t][k]++;
-    }
-
-    const types = Object.keys(byType).sort();
-    if (!types.length){
-      summaryEl.innerHTML = `<h2>${escapeHtml(title)}</h2><div style="color:var(--muted);">해당 조건에 해당하는 자산이 없습니다.</div>`;
-      return;
-    }
-
-    const rows = types.map(t=>{
-      const s = byType[t];
-      return `<tr>
-        <td>${escapeHtml(t)}</td>
-        <td class="num">${s.total}</td>
-        <td class="num">${s.in}</td>
-        <td class="num">${s.out}</td>
-        <td class="num">${s.repair}</td>
-        <td class="num">${s.retired}</td>
-      </tr>`;
-    }).join('');
-
-    summaryEl.innerHTML = `
-      <h2>${escapeHtml(title)}</h2>
+    summary.innerHTML=`
+      <h2>${title}</h2>
       <table>
-        <thead>
-          <tr>
-            <th>구분</th>
-            <th class="num">전체</th>
-            <th class="num">IN</th>
-            <th class="num">OUT</th>
-            <th class="num">수리중</th>
-            <th class="num">폐기</th>
-          </tr>
-        </thead>
-        <tbody>${rows}</tbody>
-      </table>
-    `;
+        <tr><th>구분</th><th class="num">수량</th></tr>
+        ${Object.entries(map).map(([k,v])=>`<tr><td>${k}</td><td class="num">${v.count}</td></tr>`).join('')}
+      </table>`;
   }
 
-  function setActive(mode){
-    const ids = ['total','in','out','repair','retired'];
-    for (const m of ids){
-      const el = document.getElementById('card-' + m);
-      if (!el) continue;
-      if (m === mode) el.classList.add('active');
-      else el.classList.remove('active');
-    }
+  function render(){
+    const q=g('q').value;
+    const st=g('status').value.toUpperCase();
+    const rows=assets.filter(a=>(!st||a.state===st)&&(!q||JSON.stringify(a).includes(q)));
+    tbody.innerHTML=rows.map(a=>`
+      <tr>
+        <td>${a.number}</td><td>${a.type}</td><td>${a.model}</td><td>${a.serial}</td>
+        <td>${a.user}</td><td>${a.buy}</td>
+        <td><span class="badge ${cls(a.state)}">${a.state}</span></td>
+        <td><button class="btn" onclick="print()">인쇄</button></td>
+      </tr>`).join('');
+    empty.style.display=rows.length?'none':'block';
   }
 
-  // 필터 이벤트
-  document.getElementById('q').addEventListener('input', renderTable);
-  document.getElementById('status').addEventListener('change', renderTable);
+  function activate(id){
+    ['total','in','out','repair','retired'].forEach(x=>g('card-'+x).classList.remove('active'));
+    g('card-'+id).classList.add('active');
+    renderSummary(id);
+  }
 
-  // KPI 클릭 이벤트
-  document.getElementById('card-total').addEventListener('click', ()=>{ setActive('total'); renderSummary('total'); });
-  document.getElementById('card-in').addEventListener('click', ()=>{ setActive('in'); renderSummary('in'); });
-  document.getElementById('card-out').addEventListener('click', ()=>{ setActive('out'); renderSummary('out'); });
-  document.getElementById('card-repair').addEventListener('click', ()=>{ setActive('repair'); renderSummary('repair'); });
-  document.getElementById('card-retired').addEventListener('click', ()=>{ setActive('retired'); renderSummary('retired'); });
+  ['total','in','out','repair','retired'].forEach(id=>{
+    g('card-'+id).onclick=()=>activate(id);
+  });
 
-  // 초기 렌더
-  renderTable();
-  setActive('total');
-  renderSummary('total');
+  g('q').oninput=render;
+  g('status').onchange=render;
+
+  activate('total');
+  render();
 }
 
-/* 인쇄 전용 창 */
-function printAsset(model, serial, user, buy){
-  const w = window.open('', '_blank', 'width=500,height=400');
-  if (!w) return;
-  w.document.write(`
-    <html>
-    <head>
-      <title>자산 인쇄</title>
-      <style>
-        body{font-family:sans-serif;padding:24px;}
-        h2{margin-bottom:16px;}
-        p{margin:6px 0;}
-      </style>
-    </head>
-    <body>
-      <h2>IT 자산 정보</h2>
-      <p><strong>모델명:</strong> ${escapeHtml(model)}</p>
-      <p><strong>시리얼:</strong> ${escapeHtml(serial)}</p>
-      <p><strong>사용자:</strong> ${escapeHtml(user)}</p>
-      <p><strong>구매일:</strong> ${escapeHtml(buy)}</p>
-      <hr/>
-      <button onclick="window.print()">인쇄</button>
-    </body>
-    </html>
-  `);
-  w.document.close();
-}
-
-/* 안전한 출력 */
-function escapeHtml(s){
-  return String(s ?? '')
-    .replaceAll('&','&amp;')
-    .replaceAll('<','&lt;')
-    .replaceAll('>','&gt;')
-    .replaceAll('"','&quot;')
-    .replaceAll("'","&#39;");
-}
-function escapeAttr(s){
-  return String(s ?? '')
-    .replaceAll('\\','\\\\')
-    .replaceAll("'","\\'")
-    .replaceAll('"','&quot;')
-    .replaceAll('<','&lt;')
-    .replaceAll('>','&gt;');
-}
+function g(id){return document.getElementById(id);}
+function k(id,v){g(id).textContent=v;}
+function cls(s){return s==='IN'?'in':s==='OUT'?'out':s==='수리중'?'repair':'retired';}
 
 main();
 </script>
