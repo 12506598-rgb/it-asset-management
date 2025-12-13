@@ -26,46 +26,21 @@
     color: var(--text);
     min-height: 100vh;
     position: relative;
-    overflow-x: hidden;
   }
 
-  /* 🌟 정적 별(점) 패턴: 성능 부담 거의 없음 */
+  /* 정적 별 배경 */
   body::before{
     content:"";
     position: fixed;
     inset: 0;
     pointer-events: none;
-    z-index: 0;
-    opacity: .35;
+    opacity: .3;
     background-image:
-      radial-gradient(1px 1px at 12% 18%, rgba(255,255,255,.75) 0, transparent 55%),
-      radial-gradient(1px 1px at 22% 78%, rgba(255,255,255,.55) 0, transparent 55%),
-      radial-gradient(1px 1px at 36% 42%, rgba(255,255,255,.6) 0, transparent 55%),
-      radial-gradient(1px 1px at 48% 16%, rgba(255,255,255,.5) 0, transparent 55%),
-      radial-gradient(1px 1px at 58% 68%, rgba(255,255,255,.6) 0, transparent 55%),
-      radial-gradient(1px 1px at 66% 30%, rgba(255,255,255,.55) 0, transparent 55%),
-      radial-gradient(1px 1px at 74% 86%, rgba(255,255,255,.65) 0, transparent 55%),
-      radial-gradient(1px 1px at 82% 44%, rgba(255,255,255,.5) 0, transparent 55%),
-      radial-gradient(1px 1px at 90% 22%, rgba(255,255,255,.6) 0, transparent 55%),
-      radial-gradient(2px 2px at 15% 55%, rgba(108,240,255,.22) 0, transparent 60%),
-      radial-gradient(2px 2px at 70% 15%, rgba(167,139,250,.18) 0, transparent 60%),
-      radial-gradient(2px 2px at 85% 75%, rgba(108,240,255,.14) 0, transparent 60%);
-    mix-blend-mode: screen;
-  }
-
-  /* 🌫️ 은은한 우주 안개 레이어 */
-  body::after{
-    content:"";
-    position: fixed;
-    inset: -20%;
-    pointer-events: none;
-    z-index: 0;
-    opacity: .25;
-    background:
-      radial-gradient(500px 220px at 20% 30%, rgba(108,240,255,.18), transparent 65%),
-      radial-gradient(520px 240px at 75% 65%, rgba(167,139,250,.16), transparent 68%),
-      radial-gradient(420px 200px at 55% 15%, rgba(120,140,255,.14), transparent 70%);
-    filter: blur(10px);
+      radial-gradient(1px 1px at 15% 20%, #fff, transparent),
+      radial-gradient(1px 1px at 30% 80%, #fff, transparent),
+      radial-gradient(1px 1px at 55% 35%, #fff, transparent),
+      radial-gradient(1px 1px at 70% 60%, #fff, transparent),
+      radial-gradient(1px 1px at 85% 25%, #fff, transparent);
   }
 
   .wrap{
@@ -73,466 +48,154 @@
     margin:36px auto;
     padding:0 16px;
     position: relative;
-    z-index: 1; /* 별/안개 위로 */
+    z-index: 1;
   }
 
-  h1{
-    margin:0 0 8px;
-    letter-spacing: .4px;
-  }
+  h1{ margin:0 0 8px; }
+  .sub{ color: var(--muted); margin-bottom: 24px; }
 
-  .sub{
-    color: var(--muted);
-    margin:0 0 24px;
-  }
-
-  .kpi{
-    display:flex;
-    gap:12px;
-    margin:0 0 12px;
-    flex-wrap:wrap;
-  }
-
+  /* KPI */
+  .kpi{ display:flex; gap:12px; margin-bottom:12px; flex-wrap:wrap; }
   .kpi .card{
-    background:
-      linear-gradient(180deg, rgba(80,100,255,.14), rgba(0,0,0,.35)),
-      var(--card);
+    background: var(--card);
     border:1px solid var(--line);
     border-radius:16px;
     padding:12px 16px;
     cursor:pointer;
-    box-shadow: 0 0 0 1px rgba(120,140,255,.05), 0 12px 40px rgba(30,40,120,.35);
-    transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+    box-shadow: var(--shadow);
   }
-
-  .kpi .card:hover{
-    transform: translateY(-2px);
-    border-color: var(--accent);
-    box-shadow: 0 0 12px rgba(108,240,255,.25), 0 18px 60px rgba(30,40,120,.45);
-  }
-
   .kpi .card.active{
     border-color: var(--accent2);
-    box-shadow: 0 0 16px rgba(167,139,250,.35), 0 20px 70px rgba(80,60,200,.45);
+    box-shadow: 0 0 18px rgba(167,139,250,.5);
   }
+  .kpi .n{ font-size:22px; font-weight:800; color: var(--accent); }
 
-  .kpi .n{
-    font-size:22px;
-    font-weight:800;
-    color: var(--accent);
-    margin-top: 4px;
+  /* 상태 배지 */
+  .badge{
+    padding:4px 10px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:600;
+    display:inline-block;
+    border:1px solid transparent;
   }
+  .st-in{ color:#6cf0ff; border-color:#6cf0ff; box-shadow:0 0 8px rgba(108,240,255,.5); }
+  .st-out{ color:#fbbf24; border-color:#fbbf24; box-shadow:0 0 8px rgba(251,191,36,.5); }
+  .st-repair{ color:#a78bfa; border-color:#a78bfa; box-shadow:0 0 8px rgba(167,139,250,.5); }
+  .st-retired{ color:#9ca3af; border-color:#9ca3af; }
+  .st-lost{ color:#f87171; border-color:#f87171; box-shadow:0 0 8px rgba(248,113,113,.5); }
 
-  .summary{
-    margin:0 0 16px;
-    background: var(--card);
+  /* 버튼 */
+  .btn{
+    padding:6px 10px;
+    border-radius:8px;
     border:1px solid var(--line);
-    border-radius:16px;
-    padding:12px 16px;
-    font-size:14px;
-    color: var(--text);
-    box-shadow: var(--shadow);
-    position: relative;
-    overflow: hidden;
+    background:rgba(20,25,60,.8);
+    color:var(--accent);
+    cursor:pointer;
+    font-size:12px;
   }
-
-  /* summary 살짝 하이라이트 */
-  .summary::before{
-    content:"";
-    position:absolute;
-    inset:-1px;
-    pointer-events:none;
-    background: radial-gradient(600px 220px at 10% 0%, rgba(108,240,255,.12), transparent 60%);
-    opacity:.9;
-  }
-
-  .summary h2{
-    margin:0 0 10px;
-    font-size:15px;
-    color: var(--accent2);
-    position: relative;
-  }
-
-  .summary table{
-    width:100%;
-    border-collapse:collapse;
-    margin-top:4px;
-    position: relative;
-  }
-
-  .summary th, .summary td{
-    padding:6px 8px;
-    border-bottom:1px solid var(--line);
-    font-size:13px;
-  }
-
-  .summary th{
-    background: linear-gradient(180deg, rgba(120,140,255,.18), rgba(0,0,0,.35));
-  }
-
-  .toolbar{
-    display:flex;
-    gap:12px;
-    flex-wrap:wrap;
-    margin-bottom:16px;
-  }
-
-  input, select{
-    background: rgba(8,12,28,.82);
-    color: var(--text);
-    border:1px solid var(--line);
-    border-radius:12px;
-    padding:10px 12px;
-    outline:none;
-  }
-
-  input:focus, select:focus{
-    border-color: var(--accent);
-    box-shadow: 0 0 0 2px rgba(108,240,255,.18);
-  }
+  .btn:hover{ box-shadow:0 0 8px rgba(108,240,255,.4); }
 
   table{
     width:100%;
-    border-collapse:separate;
-    border-spacing:0;
+    border-collapse:collapse;
     background: var(--card);
-    border:1px solid var(--line);
     border-radius:16px;
     overflow:hidden;
     box-shadow: var(--shadow);
-    position: relative;
   }
+  th, td{ padding:12px; border-bottom:1px solid var(--line); }
+  th{ background:rgba(120,140,255,.15); }
+  tr:hover{ background:rgba(120,140,255,.08); }
 
-  th, td{
-    padding:12px;
-    border-bottom:1px solid var(--line);
-    text-align:left;
-  }
-
-  th{
-    background: linear-gradient(180deg, rgba(120,140,255,.18), rgba(0,0,0,.35));
-    color:#dbe1ff;
-    font-weight:600;
-  }
-
-  /* ✨ 테이블 행 하이라이트 + 글로우 */
-  tbody tr{
-    position: relative;
-    transition: background .15s ease, box-shadow .15s ease, transform .1s ease;
-  }
-
-  tbody tr::before{
-    content:"";
-    position:absolute;
-    inset:0;
-    pointer-events:none;
-    opacity:0;
-    transition: opacity .15s ease;
-    background: linear-gradient(90deg, rgba(108,240,255,.10), rgba(167,139,250,.08), rgba(108,240,255,.06));
-  }
-
-  tbody tr:hover{
-    background: rgba(120,140,255,.06);
-    transform: translateY(-1px);
-    box-shadow:
-      inset 0 0 0 1px rgba(108,240,255,.18),
-      0 0 18px rgba(108,240,255,.10);
-  }
-
-  tbody tr:hover::before{
-    opacity: 1;
-  }
-
-  /* 첫 열에 은은한 포커스 라인 */
-  tbody tr:hover td:first-child{
-    box-shadow: inset 3px 0 0 0 rgba(108,240,255,.35);
-  }
-
-  .empty{
-    color: var(--muted);
-    text-align:center;
-    padding:32px;
-  }
 </style>
 </head>
 
 <body>
 <div class="wrap">
-  <h1>🛰️ IT 자산 관리 대시보드</h1>
+  <h1>IT 자산 관리 대시보드</h1>
   <p class="sub">GitHub Issues → JSON(액션) → GitHub Pages</p>
 
-  <!-- KPI 카드 -->
   <div class="kpi">
-    <div class="card" id="card-total">
-      총 자산
-      <div class="n" id="k-total">0</div>
-    </div>
-    <div class="card" id="card-in">
-      IN
-      <div class="n" id="k-in">0</div>
-    </div>
-    <div class="card" id="card-out">
-      OUT
-      <div class="n" id="k-out">0</div>
-    </div>
-    <div class="card" id="card-repair">
-      수리중
-      <div class="n" id="k-repair">0</div>
-    </div>
-    <div class="card" id="card-retired">
-      폐기
-      <div class="n" id="k-retired">0</div>
-    </div>
+    <div class="card active">총 자산<div class="n" id="k-total">0</div></div>
+    <div class="card">IN<div class="n" id="k-in">0</div></div>
+    <div class="card">OUT<div class="n" id="k-out">0</div></div>
+    <div class="card">수리중<div class="n" id="k-repair">0</div></div>
+    <div class="card">폐기<div class="n" id="k-retired">0</div></div>
   </div>
 
-  <!-- KPI 클릭 요약 -->
-  <div class="summary" id="summary"></div>
-
-  <!-- 검색 / 필터 -->
-  <div class="toolbar">
-    <input id="q" placeholder="검색: 구분/모델명/본문/사용자/시리얼…" />
-    <select id="status">
-      <option value="">상태(IN/OUT/수리/폐기) 전체</option>
-      <option value="in">IN</option>
-      <option value="out">OUT</option>
-      <option value="repair">수리중</option>
-      <option value="retired">폐기</option>
-      <option value="lost">분실</option>
-    </select>
-    <select id="state">
-      <option value="">이슈 상태 전체</option>
-      <option value="open">open</option>
-      <option value="closed">closed</option>
-    </select>
-  </div>
-
-  <!-- 자산 테이블 -->
   <table id="tbl">
     <thead>
       <tr>
-        <th style="width:72px">#</th>
-        <th style="width:120px">구분</th>
+        <th>#</th>
+        <th>구분</th>
         <th>모델명</th>
-        <th style="width:180px">시리얼 번호</th>
-        <th style="width:160px">사용자</th>
-        <th style="width:150px">구매일</th>
-        <th style="width:120px">상태</th>
+        <th>시리얼</th>
+        <th>사용자</th>
+        <th>구매일</th>
+        <th>상태</th>
+        <th>바코드</th>
       </tr>
     </thead>
     <tbody></tbody>
   </table>
-  <div class="empty" id="empty" style="display:none;">표시할 자산이 없습니다.</div>
 </div>
 
 <script>
 async function main(){
-  const res = await fetch('assets.json', {cache:'no-store'});
-  const issues = await res.json();
-
-  // ---------- 이슈 -> 자산 데이터로 변환 (모든 이슈 1:1 반영) ----------
-  const assets = [];
-  for (const i of issues) {
-    const body = i.body || '';
-
-    const labels = (i.labels || []).map(x =>
-      (typeof x === 'string' ? x : (x.name || '')).toLowerCase()
-    );
-
-    // 상태 키
-    let stateKey = '';
-    if (labels.includes('in')) stateKey = 'in';
-    else if (labels.includes('out')) stateKey = 'out';
-    else if (labels.includes('repair')) stateKey = 'repair';
-    else if (labels.includes('retired')) stateKey = 'retired';
-    else if (labels.includes('lost')) stateKey = 'lost';
-
-    // 구분
-    let mType = body.match(/장비구분:\s*(.+)/);
-    if (!mType) mType = body.match(/구분:\s*(.+)/);
-    const deviceType = mType ? mType[1].trim() : '-';
-
-    // 모델명 = 제목
-    const model = i.title || '-';
-
-    // 시리얼
-    const mSerial = body.match(/시리얼:\s*(.+)/);
-    const serial = mSerial ? mSerial[1].trim() : '-';
-
-    // 사용자
-    let mUser = body.match(/사용자:\s*(.+)/);
-    if (!mUser) mUser = body.match(/담당자:\s*(.+)/);
-    const user = mUser ? mUser[1].trim() : '-';
-
-    // 구매일
-    const mBuy = body.match(/구매일:\s*([0-9\-\.\/]+)/);
-    const buy = mBuy ? mBuy[1].replace(/\./g,'-') : '-';
-
-    const searchHay = (deviceType + ' ' + model + ' ' + body + ' ' + labels.join(' ')).toLowerCase();
-
-    assets.push({
-      number: i.number,
-      issueState: i.state,
-      labels,
-      stateKey,
-      deviceType,
-      model,
-      serial,
-      user,
-      buy,
-      searchHay
-    });
-  }
-
-  // ---------- KPI ----------
-  document.getElementById('k-total').textContent = assets.length;
-  const countByState = key => assets.filter(a => a.stateKey === key).length;
-  document.getElementById('k-in').textContent      = countByState('in');
-  document.getElementById('k-out').textContent     = countByState('out');
-  document.getElementById('k-repair').textContent  = countByState('repair');
-  document.getElementById('k-retired').textContent = countByState('retired');
-
+  const issues = await (await fetch('assets.json')).json();
   const tbody = document.querySelector('#tbl tbody');
-  const empty = document.getElementById('empty');
-  const summaryEl = document.getElementById('summary');
 
-  // ---------- 테이블 렌더 ----------
-  function renderTable(){
-    const q      = document.getElementById('q').value.trim().toLowerCase();
-    const st     = document.getElementById('status').value;   // in/out/repair/retired/lost
-    const istate = document.getElementById('state').value;    // open/closed
+  let total=0,inC=0,outC=0,rep=0,ret=0;
 
-    const rows = assets.filter(a => {
-      const labelHit = st ? (a.stateKey === st) : true;
-      const stateHit = istate ? (a.issueState === istate) : true;
-      const qHit     = q ? a.searchHay.includes(q) : true;
-      return labelHit && stateHit && qHit;
-    });
+  tbody.innerHTML = issues.map(i=>{
+    const body=i.body||'';
+    const serial=(body.match(/시리얼:\s*(.+)/)||[])[1]||'-';
+    const user=(body.match(/사용자:\s*(.+)/)||[])[1]||'-';
+    const buy=(body.match(/구매일:\s*(.+)/)||[])[1]||'-';
+    const type=(body.match(/구분:\s*(.+)/)||[])[1]||'-';
 
-    tbody.innerHTML = rows.map(a => {
-      let stateDisplay = '-';
-      if (a.stateKey === 'in')      stateDisplay = 'IN';
-      else if (a.stateKey === 'out')    stateDisplay = 'OUT';
-      else if (a.stateKey === 'repair') stateDisplay = '수리중';
-      else if (a.stateKey === 'retired')stateDisplay = '폐기';
-      else if (a.stateKey === 'lost')   stateDisplay = '분실';
+    const labels=(i.labels||[]).map(l=>l.toLowerCase());
+    let st='-',cls='';
+    if(labels.includes('in')){st='IN';cls='st-in';inC++;}
+    else if(labels.includes('out')){st='OUT';cls='st-out';outC++;}
+    else if(labels.includes('repair')){st='수리중';cls='st-repair';rep++;}
+    else if(labels.includes('retired')){st='폐기';cls='st-retired';ret++;}
+    else if(labels.includes('lost')){st='분실';cls='st-lost';}
 
-      return `<tr>
-        <td>${a.number}</td>
-        <td>${a.deviceType}</td>
-        <td>${a.model}</td>
-        <td>${a.serial}</td>
-        <td>${a.user}</td>
-        <td>${a.buy}</td>
-        <td>${stateDisplay}</td>
-      </tr>`;
-    }).join('');
+    total++;
 
-    empty.style.display = rows.length ? 'none' : 'block';
-  }
+    return `<tr>
+      <td>${i.number}</td>
+      <td>${type}</td>
+      <td>${i.title}</td>
+      <td>${serial}</td>
+      <td>${user}</td>
+      <td>${buy}</td>
+      <td><span class="badge ${cls}">${st}</span></td>
+      <td><button class="btn" onclick="barcode('${serial}')">출력</button></td>
+    </tr>`;
+  }).join('');
 
-  // ---------- 요약(KPI 클릭) ----------
-  function renderSummary(mode){
-    let filtered = assets;
-    let title = '전체 자산 현황';
-
-    if (mode !== 'total') {
-      filtered = assets.filter(a => a.stateKey === mode);
-      if (mode === 'in') title = 'IN 자산 현황';
-      else if (mode === 'out') title = 'OUT 자산 현황';
-      else if (mode === 'repair') title = '수리중 자산 현황';
-      else if (mode === 'retired') title = '폐기 자산 현황';
-    }
-
-    const map = {};
-    for (const a of filtered) {
-      const key = a.deviceType || '-';
-      if (!map[key]) map[key] = { total:0, in:0, out:0, repair:0, retired:0, lost:0 };
-      map[key].total++;
-      if (a.stateKey && map[key][a.stateKey] !== undefined) {
-        map[key][a.stateKey]++;
-      }
-    }
-
-    const types = Object.keys(map).sort();
-    if (!types.length) {
-      summaryEl.innerHTML = `<h2>${title}</h2><p style="color:var(--muted);margin:4px 0 0;">해당 조건에 해당하는 자산이 없습니다.</p>`;
-      return;
-    }
-
-    const rowsHtml = types.map(t => {
-      const s = map[t];
-      return `<tr>
-        <td>${t}</td>
-        <td style="text-align:right;">${s.total}</td>
-        <td style="text-align:right;">${s.in}</td>
-        <td style="text-align:right;">${s.out}</td>
-        <td style="text-align:right;">${s.repair}</td>
-        <td style="text-align:right;">${s.retired}</td>
-        <td style="text-align:right;">${s.lost}</td>
-      </tr>`;
-    }).join('');
-
-    summaryEl.innerHTML = `
-      <h2>${title}</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>구분</th>
-            <th style="width:70px;text-align:right;">전체</th>
-            <th style="width:70px;text-align:right;">IN</th>
-            <th style="width:70px;text-align:right;">OUT</th>
-            <th style="width:70px;text-align:right;">수리중</th>
-            <th style="width:70px;text-align:right;">폐기</th>
-            <th style="width:70px;text-align:right;">분실</th>
-          </tr>
-        </thead>
-        <tbody>${rowsHtml}</tbody>
-      </table>
-    `;
-  }
-
-  function setActiveCard(mode){
-    ['total','in','out','repair','retired'].forEach(m => {
-      const el = document.getElementById('card-' + m);
-      if (!el) return;
-      if (m === mode) el.classList.add('active');
-      else el.classList.remove('active');
-    });
-  }
-
-  // 이벤트
-  ['q','status','state'].forEach(id =>
-    document.getElementById(id).addEventListener('input', renderTable)
-  );
-
-  document.getElementById('card-total').addEventListener('click', () => {
-    setActiveCard('total'); renderSummary('total');
-  });
-  document.getElementById('card-in').addEventListener('click', () => {
-    setActiveCard('in'); renderSummary('in');
-  });
-  document.getElementById('card-out').addEventListener('click', () => {
-    setActiveCard('out'); renderSummary('out');
-  });
-  document.getElementById('card-repair').addEventListener('click', () => {
-    setActiveCard('repair'); renderSummary('repair');
-  });
-  document.getElementById('card-retired').addEventListener('click', () => {
-    setActiveCard('retired'); renderSummary('retired');
-  });
-
-  // 초기 렌더
-  renderTable();
-  setActiveCard('total');
-  renderSummary('total');
+  k-total.textContent=total;
+  k-in.textContent=inC;
+  k-out.textContent=outC;
+  k-repair.textContent=rep;
+  k-retired.textContent=ret;
 }
 
-main().catch(e => {
-  console.error(e);
-  document.getElementById('empty').style.display='block';
-  const summaryEl = document.getElementById('summary');
-  if (summaryEl) summaryEl.innerHTML = '<p style="color:var(--muted);margin:0;">데이터를 불러오는 중 오류가 발생했습니다.</p>';
-});
+function barcode(code){
+  const w=window.open('','_blank','width=400,height=300');
+  w.document.write(`
+    <h3>자산 바코드</h3>
+    <svg id="b"></svg>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"><\/script>
+    <script>JsBarcode("#b","${code}",{displayValue:true});<\/script>
+  `);
+}
+
+main();
 </script>
 </body>
 </html>
