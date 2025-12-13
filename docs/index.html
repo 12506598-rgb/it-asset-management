@@ -33,7 +33,7 @@
   .kpi {
     display:flex;
     gap:12px;
-    margin-bottom:16px;
+    margin-bottom:12px;
     flex-wrap:wrap;
   }
 
@@ -43,11 +43,55 @@
     border-radius:12px;
     padding:12px 16px;
     min-width:110px;
+    cursor:pointer;
+    transition: transform .08s ease, border-color .15s ease, box-shadow .15s ease;
+    user-select:none;
+  }
+  .kpi .card:hover {
+    transform: translateY(-1px);
+    border-color:#3a4354;
+    box-shadow: 0 8px 30px rgba(0,0,0,.25);
+  }
+  .kpi .card.active{
+    border-color:#4b5563;
+    box-shadow: 0 0 0 1px #4b5563;
   }
 
   .kpi .n {
     font-size:20px;
     font-weight:700;
+  }
+
+  .summary{
+    margin: 0 0 16px;
+    background: var(--card);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:12px 16px;
+  }
+  .summary h2{
+    margin:0 0 10px;
+    font-size:14px;
+    color:#cfd5e1;
+  }
+  .summary table{
+    width:100%;
+    border-collapse:collapse;
+  }
+  .summary th, .summary td{
+    padding:8px 10px;
+    border-bottom:1px solid var(--line);
+    font-size:13px;
+    text-align:left;
+  }
+  .summary th{
+    background:#121620;
+    color:#cfd5e1;
+    font-weight:600;
+  }
+  .summary td.num, .summary th.num{
+    text-align:right;
+    width:72px;
   }
 
   .toolbar {
@@ -125,12 +169,15 @@
 
   <!-- KPI -->
   <div class="kpi">
-    <div class="card">총 자산<div class="n" id="k-total">0</div></div>
-    <div class="card">IN<div class="n" id="k-in">0</div></div>
-    <div class="card">OUT<div class="n" id="k-out">0</div></div>
-    <div class="card">수리중<div class="n" id="k-repair">0</div></div>
-    <div class="card">폐기<div class="n" id="k-retired">0</div></div>
+    <div class="card" id="card-total">총 자산<div class="n" id="k-total">0</div></div>
+    <div class="card" id="card-in">IN<div class="n" id="k-in">0</div></div>
+    <div class="card" id="card-out">OUT<div class="n" id="k-out">0</div></div>
+    <div class="card" id="card-repair">수리중<div class="n" id="k-repair">0</div></div>
+    <div class="card" id="card-retired">폐기<div class="n" id="k-retired">0</div></div>
   </div>
+
+  <!-- 요약(자산 현황) -->
+  <div class="summary" id="summary"></div>
 
   <!-- 검색 / 필터 -->
   <div class="toolbar">
@@ -187,12 +234,12 @@ async function main(){
     return {
       number: i.number,
       type: pick(/구분:\s*(.+)/),
-      model: i.title,
+      model: i.title || '-',
       serial: pick(/시리얼:\s*(.+)/),
       user: pick(/사용자:\s*(.+)/),
       buy: pick(/구매일:\s*([0-9\-\.]+)/).replace(/\./g,'-'),
       state,
-      hay: (body + ' ' + i.title).toLowerCase()
+      hay: (body + ' ' + (i.title || '')).toLowerCase()
     };
   });
 
@@ -205,27 +252,37 @@ async function main(){
 
   const tbody = document.getElementById('tbody');
   const empty = document.getElementById('empty');
+  const summaryEl = document.getElementById('summary');
 
-  function render(){
+  function stateToKey(s){
+    if (s === 'IN') return 'in';
+    if (s === 'OUT') return 'out';
+    if (s === '수리중') return 'repair';
+    if (s === '폐기') return 'retired';
+    return '';
+  }
+
+  // 테이블 렌더
+  function renderTable(){
     const q = document.getElementById('q').value.toLowerCase();
     const st = document.getElementById('status').value;
 
     const rows = assets.filter(a=>{
       return (!q || a.hay.includes(q)) &&
-             (!st || a.state.toLowerCase() === st);
+             (!st || stateToKey(a.state) === st);
     });
 
     tbody.innerHTML = rows.map(a=>`
       <tr>
         <td>${a.number}</td>
-        <td>${a.type}</td>
-        <td>${a.model}</td>
-        <td>${a.serial}</td>
-        <td>${a.user}</td>
-        <td>${a.buy}</td>
-        <td><span class="badge">${a.state}</span></td>
+        <td>${escapeHtml(a.type)}</td>
+        <td>${escapeHtml(a.model)}</td>
+        <td>${escapeHtml(a.serial)}</td>
+        <td>${escapeHtml(a.user)}</td>
+        <td>${escapeHtml(a.buy)}</td>
+        <td><span class="badge">${escapeHtml(a.state)}</span></td>
         <td>
-          <button class="btn" onclick="printAsset('${a.model}','${a.serial}','${a.user}','${a.buy}')">
+          <button class="btn" onclick="printAsset('${escapeAttr(a.model)}','${escapeAttr(a.serial)}','${escapeAttr(a.user)}','${escapeAttr(a.buy)}')">
             인쇄
           </button>
         </td>
@@ -235,15 +292,95 @@ async function main(){
     empty.style.display = rows.length ? 'none' : 'block';
   }
 
-  document.getElementById('q').addEventListener('input', render);
-  document.getElementById('status').addEventListener('change', render);
+  // 요약(구분별 집계)
+  function renderSummary(mode){
+    // mode: total | in | out | repair | retired
+    let filtered = assets;
+    let title = '전체 자산 현황';
+    if (mode && mode !== 'total') {
+      filtered = assets.filter(a => stateToKey(a.state) === mode);
+      if (mode === 'in') title = 'IN 자산 현황';
+      if (mode === 'out') title = 'OUT 자산 현황';
+      if (mode === 'repair') title = '수리중 자산 현황';
+      if (mode === 'retired') title = '폐기 자산 현황';
+    }
 
-  render();
+    const byType = {};
+    for (const a of filtered){
+      const t = a.type || '-';
+      if (!byType[t]) byType[t] = { total:0, in:0, out:0, repair:0, retired:0 };
+      byType[t].total++;
+      const k = stateToKey(a.state);
+      if (k && byType[t][k] !== undefined) byType[t][k]++;
+    }
+
+    const types = Object.keys(byType).sort();
+    if (!types.length){
+      summaryEl.innerHTML = `<h2>${escapeHtml(title)}</h2><div style="color:var(--muted);">해당 조건에 해당하는 자산이 없습니다.</div>`;
+      return;
+    }
+
+    const rows = types.map(t=>{
+      const s = byType[t];
+      return `<tr>
+        <td>${escapeHtml(t)}</td>
+        <td class="num">${s.total}</td>
+        <td class="num">${s.in}</td>
+        <td class="num">${s.out}</td>
+        <td class="num">${s.repair}</td>
+        <td class="num">${s.retired}</td>
+      </tr>`;
+    }).join('');
+
+    summaryEl.innerHTML = `
+      <h2>${escapeHtml(title)}</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>구분</th>
+            <th class="num">전체</th>
+            <th class="num">IN</th>
+            <th class="num">OUT</th>
+            <th class="num">수리중</th>
+            <th class="num">폐기</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+  }
+
+  function setActive(mode){
+    const ids = ['total','in','out','repair','retired'];
+    for (const m of ids){
+      const el = document.getElementById('card-' + m);
+      if (!el) continue;
+      if (m === mode) el.classList.add('active');
+      else el.classList.remove('active');
+    }
+  }
+
+  // 필터 이벤트
+  document.getElementById('q').addEventListener('input', renderTable);
+  document.getElementById('status').addEventListener('change', renderTable);
+
+  // KPI 클릭 이벤트
+  document.getElementById('card-total').addEventListener('click', ()=>{ setActive('total'); renderSummary('total'); });
+  document.getElementById('card-in').addEventListener('click', ()=>{ setActive('in'); renderSummary('in'); });
+  document.getElementById('card-out').addEventListener('click', ()=>{ setActive('out'); renderSummary('out'); });
+  document.getElementById('card-repair').addEventListener('click', ()=>{ setActive('repair'); renderSummary('repair'); });
+  document.getElementById('card-retired').addEventListener('click', ()=>{ setActive('retired'); renderSummary('retired'); });
+
+  // 초기 렌더
+  renderTable();
+  setActive('total');
+  renderSummary('total');
 }
 
-/* 🔹 인쇄 전용 창 */
+/* 인쇄 전용 창 */
 function printAsset(model, serial, user, buy){
   const w = window.open('', '_blank', 'width=500,height=400');
+  if (!w) return;
   w.document.write(`
     <html>
     <head>
@@ -256,16 +393,34 @@ function printAsset(model, serial, user, buy){
     </head>
     <body>
       <h2>IT 자산 정보</h2>
-      <p><strong>모델명:</strong> ${model}</p>
-      <p><strong>시리얼:</strong> ${serial}</p>
-      <p><strong>사용자:</strong> ${user}</p>
-      <p><strong>구매일:</strong> ${buy}</p>
+      <p><strong>모델명:</strong> ${escapeHtml(model)}</p>
+      <p><strong>시리얼:</strong> ${escapeHtml(serial)}</p>
+      <p><strong>사용자:</strong> ${escapeHtml(user)}</p>
+      <p><strong>구매일:</strong> ${escapeHtml(buy)}</p>
       <hr/>
       <button onclick="window.print()">인쇄</button>
     </body>
     </html>
   `);
   w.document.close();
+}
+
+/* 안전한 출력 */
+function escapeHtml(s){
+  return String(s ?? '')
+    .replaceAll('&','&amp;')
+    .replaceAll('<','&lt;')
+    .replaceAll('>','&gt;')
+    .replaceAll('"','&quot;')
+    .replaceAll("'","&#39;");
+}
+function escapeAttr(s){
+  return String(s ?? '')
+    .replaceAll('\\','\\\\')
+    .replaceAll("'","\\'")
+    .replaceAll('"','&quot;')
+    .replaceAll('<','&lt;')
+    .replaceAll('>','&gt;');
 }
 
 main();
