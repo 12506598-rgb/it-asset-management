@@ -29,7 +29,6 @@
 
   h1 { margin:0 0 14px; }
 
-  /* KPI */
   .kpi {
     display:flex;
     gap:12px;
@@ -63,7 +62,6 @@
     margin-top:6px;
   }
 
-  /* 요약 */
   .summary{
     margin: 0 0 14px;
     background: var(--card);
@@ -96,7 +94,6 @@
     padding:10px 2px 2px;
   }
 
-  /* 필터 */
   .toolbar {
     display:flex;
     gap:12px;
@@ -112,7 +109,6 @@
     padding:10px 12px;
   }
 
-  /* 테이블 */
   table {
     width:100%;
     border-collapse:collapse;
@@ -135,7 +131,6 @@
 
   tr:hover { background:#0f1420; }
 
-  /* 상태 배지 */
   .badge {
     display:inline-block;
     padding:4px 10px;
@@ -145,11 +140,11 @@
     color:#fff;
     line-height: 1.1;
   }
-  .st-in { background:#16a34a; }       /* 초록 */
-  .st-out { background:#f97316; }      /* 주황 */
-  .st-repair { background:#6b7280; }   /* 회색 */
-  .st-retired { background:#dc2626; }  /* 빨강 */
-  .st-unknown { background:#374151; }  /* 미지정(회흑) */
+  .st-in { background:#16a34a; }
+  .st-out { background:#f97316; }
+  .st-repair { background:#6b7280; }
+  .st-retired { background:#dc2626; }
+  .st-unknown { background:#374151; }
 
   .btn {
     padding:6px 10px;
@@ -161,22 +156,12 @@
     font-size:12px;
     font-weight:600;
   }
-
   .btn:hover { background:#141a2a; }
 
   .empty {
     color:var(--muted);
     text-align:center;
     padding:32px;
-  }
-
-  /* 작은 화면에서 너무 좁아지지 않게 */
-  @media (max-width: 820px){
-    .wrap{ margin:20px auto; }
-    th:nth-child(4), td:nth-child(4),
-    th:nth-child(6), td:nth-child(6){
-      display:none; /* 시리얼/구매일 숨김 (선택) */
-    }
   }
 </style>
 </head>
@@ -185,7 +170,6 @@
 <div class="wrap">
   <h1>IT 자산 관리 대시보드</h1>
 
-  <!-- KPI -->
   <div class="kpi">
     <div class="card" id="card-total">총 자산<div class="n" id="k-total">0</div></div>
     <div class="card" id="card-in">IN<div class="n" id="k-in">0</div></div>
@@ -194,10 +178,8 @@
     <div class="card" id="card-retired">폐기<div class="n" id="k-retired">0</div></div>
   </div>
 
-  <!-- 요약 -->
   <div class="summary" id="summary"></div>
 
-  <!-- 필터 -->
   <div class="toolbar">
     <input id="q" placeholder="검색" />
     <select id="status">
@@ -209,7 +191,6 @@
     </select>
   </div>
 
-  <!-- 테이블 -->
   <table>
     <thead>
       <tr>
@@ -239,7 +220,15 @@ async function main(){
     return m ? m[1].trim() : '-';
   }
 
-  // 라벨 -> 상태 키(in/out/repair/retired/unknown)
+  // ✅ 라벨 문자열/객체 모두 처리
+  function normalizeLabels(rawLabels){
+    return (rawLabels || []).map(l => {
+      if (typeof l === 'string') return l.toLowerCase();
+      if (l && typeof l === 'object' && l.name) return String(l.name).toLowerCase();
+      return '';
+    }).filter(Boolean);
+  }
+
   function labelsToKey(labels){
     if (labels.includes('in')) return 'in';
     if (labels.includes('out')) return 'out';
@@ -248,7 +237,6 @@ async function main(){
     return 'unknown';
   }
 
-  // 상태 키 -> 표시 텍스트
   function keyToText(key){
     if (key === 'in') return 'IN';
     if (key === 'out') return 'OUT';
@@ -257,7 +245,6 @@ async function main(){
     return '미지정';
   }
 
-  // 상태 키 -> 배지 클래스
   function keyToBadgeClass(key){
     if (key === 'in') return 'st-in';
     if (key === 'out') return 'st-out';
@@ -268,10 +255,10 @@ async function main(){
 
   const assets = issues.map(i=>{
     const body = i.body || '';
-    const labels = (i.labels || []).map(l => (typeof l === 'string' ? l : (l.name||'')).toLowerCase());
+    const labels = normalizeLabels(i.labels);
     const stateKey = labelsToKey(labels);
 
-    const a = {
+    return {
       number: i.number,
       type: pick(body, /구분:\s*(.+)/),
       model: i.title || '-',
@@ -282,7 +269,6 @@ async function main(){
       stateText: keyToText(stateKey),
       hay: (body + ' ' + (i.title||'') + ' ' + labels.join(' ')).toLowerCase()
     };
-    return a;
   });
 
   // KPI
@@ -297,7 +283,6 @@ async function main(){
   const summary = el('summary');
 
   function renderSummary(modeKey){
-    // modeKey: total | in | out | repair | retired
     let title = '전체 자산 현황';
     let list = assets;
 
@@ -307,7 +292,6 @@ async function main(){
       list = assets.filter(a => a.stateKey === modeKey);
     }
 
-    // 구분별 수량 집계
     const map = {};
     for (const a of list){
       const t = a.type || '-';
@@ -346,7 +330,7 @@ async function main(){
 
   function renderTable(){
     const q = el('q').value.trim().toLowerCase();
-    const st = el('status').value; // in/out/repair/retired
+    const st = el('status').value;
 
     const rows = assets.filter(a => {
       const qHit = !q || a.hay.includes(q);
@@ -375,18 +359,15 @@ async function main(){
     el('card-'+modeKey).classList.add('active');
   }
 
-  // KPI 클릭
   el('card-total').addEventListener('click', ()=>{ setActive('total'); renderSummary('total'); });
   el('card-in').addEventListener('click', ()=>{ setActive('in'); renderSummary('in'); });
   el('card-out').addEventListener('click', ()=>{ setActive('out'); renderSummary('out'); });
   el('card-repair').addEventListener('click', ()=>{ setActive('repair'); renderSummary('repair'); });
   el('card-retired').addEventListener('click', ()=>{ setActive('retired'); renderSummary('retired'); });
 
-  // 필터
   el('q').addEventListener('input', renderTable);
   el('status').addEventListener('change', renderTable);
 
-  // 초기
   setActive('total');
   renderSummary('total');
   renderTable();
