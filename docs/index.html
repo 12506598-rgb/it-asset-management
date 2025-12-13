@@ -13,11 +13,11 @@
     --muted:#9ca3af;
     --line:#2a2f3a;
 
-    --c-total:#60a5fa;   /* blue */
-    --c-in:#22c55e;      /* green */
-    --c-out:#fb923c;     /* orange */
-    --c-repair:#9ca3af;  /* gray */
-    --c-retired:#ef4444; /* red */
+    --c-total:#60a5fa;
+    --c-in:#22c55e;
+    --c-out:#fb923c;
+    --c-repair:#9ca3af;
+    --c-retired:#ef4444;
   }
 
   body {
@@ -56,6 +56,7 @@
 
   .kpi .card:hover{
     transform: translateY(-1px);
+    border-color:#3a4354;
     box-shadow: 0 10px 26px rgba(0,0,0,.28);
   }
 
@@ -81,7 +82,6 @@
     letter-spacing:-.3px;
   }
 
-  /* 상태별 색상 (카드 테두리/포커스) */
   .card[data-kind="total"] .dot{ background: var(--c-total); }
   .card[data-kind="in"] .dot{ background: var(--c-in); }
   .card[data-kind="out"] .dot{ background: var(--c-out); }
@@ -106,13 +106,53 @@
     border-radius:14px;
     padding:12px 14px;
   }
+
+  .summary-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin: 0 0 10px;
+  }
+
   .summary h2{
-    margin:0 0 10px;
+    margin:0;
     font-size:14px;
     color:#cfd5e1;
   }
 
-  /* 요약 표: 간격 줄이기 */
+  .pill{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:6px 10px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.12);
+    background: rgba(255,255,255,.03);
+    color:#dbe2ef;
+    font-size:12px;
+    font-weight:650;
+    cursor:default;
+  }
+
+  .linkbtn{
+    padding:6px 10px;
+    border-radius:10px;
+    border:1px solid var(--line);
+    background:#0b0e14;
+    color:var(--text);
+    cursor:pointer;
+    font-size:12px;
+    font-weight:650;
+  }
+  .linkbtn:hover{ background:#141a2a; }
+
+  /* ✅ 요약 표를 가운데로 모으기 */
+  .summary-inner{
+    max-width: 760px;      /* 핵심: 폭 제한 */
+    margin: 0 auto;        /* 가운데 정렬 */
+  }
+
   .summary table{
     width:100%;
     border-collapse:collapse;
@@ -127,8 +167,9 @@
     background:#121620;
     font-weight:650;
   }
-  .summary th.type { width: 70%; }
-  .summary th.qty { width: 30%; text-align:right; }
+
+  .summary th.type { width: 72%; }
+  .summary th.qty { width: 28%; text-align:right; }
   .summary td.qty { text-align:right; }
 
   .typecell{
@@ -157,10 +198,20 @@
     color:#e6ebf5;
   }
 
+  /* ✅ 요약 행 클릭 가능하게 */
+  .summary tbody tr {
+    cursor:pointer;
+    transition: background .12s ease;
+  }
+  .summary tbody tr:hover{
+    background: rgba(96,165,250,.06);
+  }
+
   .summary .hint{
     color:var(--muted);
     font-size:13px;
     padding:10px 2px 2px;
+    text-align:center;
   }
 
   /* 필터 */
@@ -180,7 +231,7 @@
   }
 
   /* 테이블 */
-  table {
+  table.main {
     width:100%;
     border-collapse:collapse;
     background:var(--card);
@@ -189,18 +240,18 @@
     overflow:hidden;
   }
 
-  th, td {
+  table.main th, table.main td {
     padding:12px;
     border-bottom:1px solid var(--line);
     vertical-align: middle;
   }
 
-  th {
+  table.main th {
     background:#121620;
     font-weight:650;
   }
 
-  tr:hover { background:#0f1420; }
+  table.main tr:hover { background:#0f1420; }
 
   /* 상태 배지 */
   .badge {
@@ -282,7 +333,7 @@
     </select>
   </div>
 
-  <table>
+  <table class="main">
     <thead>
       <tr>
         <th style="width:70px">#</th>
@@ -305,6 +356,9 @@
 async function main(){
   const res = await fetch('assets.json', {cache:'no-store'});
   const issues = await res.json();
+
+  // ✅ 요약 클릭용: 현재 선택된 구분 필터
+  let activeTypeFilter = '';
 
   function pick(body, r){
     const m = body.match(r);
@@ -398,16 +452,25 @@ async function main(){
     }
 
     const types = Object.keys(map).sort();
+
+    const filterPill = activeTypeFilter
+      ? `<span class="pill">필터: ${escapeHtml(activeTypeFilter)} <button class="linkbtn" style="margin-left:8px" id="btn-clear-type">필터 해제</button></span>`
+      : '';
+
     if (!types.length){
       summary.innerHTML = `
-        <h2>${escapeHtml(title)}</h2>
+        <div class="summary-head">
+          <h2>${escapeHtml(title)}</h2>
+          ${filterPill}
+        </div>
         <div class="hint">해당 상태에 해당하는 자산이 없습니다.</div>
       `;
+      bindClearTypeIfNeeded();
       return;
     }
 
     const rows = types.map(t => `
-      <tr>
+      <tr data-type="${escapeAttr(t)}">
         <td>
           <div class="typecell">
             <div class="typeicon">${typeIcon(t)}</div>
@@ -419,17 +482,65 @@ async function main(){
     `).join('');
 
     summary.innerHTML = `
-      <h2>${escapeHtml(title)}</h2>
-      <table>
-        <thead>
-          <tr>
-            <th class="type">구분</th>
-            <th class="qty">수량</th>
-          </tr>
-        </thead>
-        <tbody>${rows}</tbody>
-      </table>
+      <div class="summary-head">
+        <h2>${escapeHtml(title)}</h2>
+        ${filterPill}
+      </div>
+      <div class="summary-inner">
+        <table>
+          <thead>
+            <tr>
+              <th class="type">구분</th>
+              <th class="qty">수량</th>
+            </tr>
+          </thead>
+          <tbody id="summary-body">${rows}</tbody>
+        </table>
+      </div>
     `;
+
+    // ✅ 요약 행 클릭 -> 아래 테이블 구분 필터
+    const sb = el('summary-body');
+    if (sb){
+      sb.querySelectorAll('tr[data-type]').forEach(tr=>{
+        tr.addEventListener('click', ()=>{
+          const t = tr.getAttribute('data-type') || '';
+          activeTypeFilter = t;
+
+          // 사용자가 현재 필터를 체감하게 검색창에도 표시
+          el('q').value = t;
+
+          renderTable();
+          renderSummary(modeKey);
+        });
+      });
+    }
+
+    bindClearTypeIfNeeded();
+  }
+
+  function bindClearTypeIfNeeded(){
+    const btn = document.getElementById('btn-clear-type');
+    if (btn){
+      btn.addEventListener('click', (e)=>{
+        e.preventDefault();
+        activeTypeFilter = '';
+        el('q').value = '';
+        renderTable();
+
+        // 현재 활성 KPI 기준으로 요약 재렌더
+        const mode = getActiveMode();
+        renderSummary(mode);
+      });
+    }
+  }
+
+  function getActiveMode(){
+    const modes = ['total','in','out','repair','retired'];
+    for (const m of modes){
+      if (el('card-'+m).classList.contains('active')) return m;
+    }
+    return 'total';
   }
 
   function renderTable(){
@@ -439,7 +550,8 @@ async function main(){
     const rows = assets.filter(a => {
       const qHit = !q || a.hay.includes(q);
       const stHit = !st || a.stateKey === st;
-      return qHit && stHit;
+      const typeHit = !activeTypeFilter || (String(a.type || '') === String(activeTypeFilter));
+      return qHit && stHit && typeHit;
     });
 
     tbody.innerHTML = rows.map(a => `
@@ -469,7 +581,11 @@ async function main(){
   el('card-repair').addEventListener('click', ()=>{ setActive('repair'); renderSummary('repair'); });
   el('card-retired').addEventListener('click', ()=>{ setActive('retired'); renderSummary('retired'); });
 
-  el('q').addEventListener('input', renderTable);
+  el('q').addEventListener('input', ()=>{
+    // 검색을 직접 바꾸면 “구분 고정 필터”는 유지하되, 사용자가 원치 않으면 해제 가능
+    renderTable();
+  });
+
   el('status').addEventListener('change', renderTable);
 
   setActive('total');
