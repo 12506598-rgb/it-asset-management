@@ -6,7 +6,7 @@
 <title>IT 자산 관리 대시보드</title>
 
 <style>
-  :root{
+  :root {
     --bg:#0f1116;
     --card:#161a22;
     --text:#e5e7eb;
@@ -33,102 +33,202 @@
     padding:0 16px;
   }
 
-  h1{ margin:0 0 14px; }
+  h1{ margin:0 0 14px; letter-spacing:-.2px; }
 
   /* KPI */
   .kpi{
     display:flex;
     gap:12px;
+    margin:0 0 14px;
     flex-wrap:wrap;
-    margin-bottom:14px;
   }
+
   .kpi .card{
-    background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,0));
+    background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,0));
     border:1px solid var(--line);
     border-radius:14px;
     padding:12px 16px;
-    min-width:120px;
+    min-width:128px;
     cursor:pointer;
+    user-select:none;
+    transition: transform .08s ease, border-color .15s ease, box-shadow .15s ease;
   }
-  .kpi .card.active{
-    box-shadow:0 0 0 1px rgba(255,255,255,.2);
+
+  .kpi .card:hover{
+    transform: translateY(-1px);
+    border-color:#3a4354;
+    box-shadow: 0 10px 26px rgba(0,0,0,.28);
   }
+
   .kpi .label{
     display:flex;
     align-items:center;
     gap:8px;
-    font-weight:700;
+    font-weight:650;
+    color:#d7dde9;
   }
+
   .dot{
-    width:10px;height:10px;border-radius:50%;
+    width:10px; height:10px;
+    border-radius:999px;
+    background: var(--line);
+    box-shadow: 0 0 0 2px rgba(255,255,255,.03) inset;
   }
-  .card[data-kind="total"] .dot{background:var(--c-total);}
-  .card[data-kind="in"] .dot{background:var(--c-in);}
-  .card[data-kind="out"] .dot{background:var(--c-out);}
-  .card[data-kind="repair"] .dot{background:var(--c-repair);}
-  .card[data-kind="retired"] .dot{background:var(--c-retired);}
+
   .kpi .n{
     font-size:22px;
     font-weight:800;
-    margin-top:6px;
+    margin-top:8px;
+    letter-spacing:-.3px;
   }
+
+  .card[data-kind="total"] .dot{ background: var(--c-total); }
+  .card[data-kind="in"] .dot{ background: var(--c-in); }
+  .card[data-kind="out"] .dot{ background: var(--c-out); }
+  .card[data-kind="repair"] .dot{ background: var(--c-repair); }
+  .card[data-kind="retired"] .dot{ background: var(--c-retired); }
+
+  .kpi .card.active{
+    border-color: rgba(255,255,255,.18);
+    box-shadow: 0 0 0 1px rgba(255,255,255,.12), 0 14px 34px rgba(0,0,0,.32);
+  }
+  .kpi .card.active[data-kind="total"]{ box-shadow: 0 0 0 1px rgba(96,165,250,.55), 0 14px 34px rgba(0,0,0,.32); }
+  .kpi .card.active[data-kind="in"]{ box-shadow: 0 0 0 1px rgba(34,197,94,.55), 0 14px 34px rgba(0,0,0,.32); }
+  .kpi .card.active[data-kind="out"]{ box-shadow: 0 0 0 1px rgba(251,146,60,.55), 0 14px 34px rgba(0,0,0,.32); }
+  .kpi .card.active[data-kind="repair"]{ box-shadow: 0 0 0 1px rgba(156,163,175,.55), 0 14px 34px rgba(0,0,0,.32); }
+  .kpi .card.active[data-kind="retired"]{ box-shadow: 0 0 0 1px rgba(239,68,68,.55), 0 14px 34px rgba(0,0,0,.32); }
 
   /* 요약 */
   .summary{
+    margin:0 0 14px;
     background:var(--card);
     border:1px solid var(--line);
     border-radius:14px;
-    padding:12px;
-    margin-bottom:14px;
+    padding:12px 14px 14px;
   }
-  .summary h2{
-    margin:0 0 10px;
-    font-size:14px;
-    color:#cfd5e1;
-  }
-  .summary-grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
-    gap:10px;
-  }
-  .type-card{
-    border:1px solid rgba(255,255,255,.12);
-    border-radius:12px;
-    padding:10px 12px;
+
+  .summary-head{
     display:flex;
     align-items:center;
     justify-content:space-between;
-    cursor:pointer;
+    gap:12px;
+    margin:0 0 12px;
   }
+
+  .summary h2{
+    margin:0;
+    font-size:14px;
+    color:#cfd5e1;
+  }
+
+  .pill{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:6px 10px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.12);
+    background: rgba(255,255,255,.03);
+    color:#dbe2ef;
+    font-size:12px;
+    font-weight:650;
+  }
+
+  .linkbtn{
+    padding:6px 10px;
+    border-radius:10px;
+    border:1px solid var(--line);
+    background:#0b0e14;
+    color:var(--text);
+    cursor:pointer;
+    font-size:12px;
+    font-weight:650;
+  }
+  .linkbtn:hover{ background:#141a2a; }
+
+  /* ✅ 요약을 카드형(박스)으로 */
+  .summary-grid{
+    display:grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap:10px;
+  }
+
+  .type-card{
+    border:1px solid rgba(255,255,255,.10);
+    background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,0));
+    border-radius:14px;
+    padding:12px 12px;
+    cursor:pointer;
+    transition: transform .08s ease, border-color .15s ease, box-shadow .15s ease;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    min-width:0;
+  }
+  .type-card:hover{
+    transform: translateY(-1px);
+    border-color: rgba(255,255,255,.18);
+    box-shadow: 0 10px 26px rgba(0,0,0,.26);
+  }
+  .type-card.active{
+    border-color: rgba(96,165,250,.55);
+    box-shadow: 0 0 0 1px rgba(96,165,250,.45), 0 10px 26px rgba(0,0,0,.26);
+  }
+
   .type-left{
     display:flex;
     align-items:center;
     gap:10px;
+    min-width:0;
   }
   .typeicon{
-    width:28px;height:28px;
-    border-radius:10px;
+    width:30px;
+    height:30px;
+    border-radius:12px;
+    border:1px solid rgba(255,255,255,.10);
+    background: rgba(255,255,255,.03);
     display:flex;
     align-items:center;
     justify-content:center;
-    background:rgba(255,255,255,.05);
+    font-size:16px;
+    flex: 0 0 auto;
+  }
+  .typename{
+    font-weight:750;
+    color:#e6ebf5;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
   }
   .typecount{
-    font-weight:800;
-    padding:4px 10px;
-    border-radius:999px;
-    background:#0b0e14;
-    border:1px solid var(--line);
+    padding:6px 10px;
+    border-radius:12px;
+    border:1px solid rgba(255,255,255,.10);
+    background: rgba(0,0,0,.22);
+    font-weight:900;
+    letter-spacing:-.2px;
+    flex: 0 0 auto;
+    min-width:40px;
+    text-align:center;
+  }
+
+  .hint{
+    color:var(--muted);
+    font-size:13px;
+    padding:6px 2px 2px;
+    text-align:center;
   }
 
   /* 필터 */
   .toolbar{
     display:flex;
     gap:12px;
-    margin-bottom:14px;
     flex-wrap:wrap;
+    margin:0 0 14px;
   }
-  input,select{
+
+  input, select{
     background:#0b0e14;
     color:var(--text);
     border:1px solid var(--line);
@@ -136,52 +236,83 @@
     padding:10px 12px;
   }
 
-  /* 테이블 */
+  /* 테이블(데스크톱) */
   .table-wrap{
-    background:var(--card);
     border:1px solid var(--line);
     border-radius:14px;
-    overflow:auto;
+    overflow:hidden;
+    background:var(--card);
   }
-  table{
+
+  table.main{
     width:100%;
     border-collapse:collapse;
-    min-width:900px;
   }
-  th,td{
+
+  table.main th, table.main td{
     padding:12px;
     border-bottom:1px solid var(--line);
+    vertical-align: middle;
   }
-  th{background:#121620;}
-  tr:hover{background:#0f1420;}
 
-  /* 상태 */
+  table.main th{
+    background:#121620;
+    font-weight:650;
+  }
+
+  table.main tr:hover{ background:#0f1420; }
+
+  /* 상태 배지 */
   .badge{
+    display:inline-block;
     padding:4px 10px;
     border-radius:999px;
     font-size:12px;
     font-weight:800;
     color:#fff;
+    line-height:1.1;
   }
-  .st-in{background:#16a34a;}
-  .st-out{background:#f97316;}
-  .st-repair{background:#6b7280;}
-  .st-retired{background:#dc2626;}
-  .st-unknown{background:#374151;}
+  .st-in{ background:#16a34a; }
+  .st-out{ background:#f97316; }
+  .st-repair{ background:#6b7280; }
+  .st-retired{ background:#dc2626; }
+  .st-unknown{ background:#374151; }
 
   .btn{
     padding:6px 10px;
-    border-radius:10px;
+    border-radius:12px;
     border:1px solid var(--line);
     background:#0b0e14;
-    color:#fff;
+    color:var(--text);
     cursor:pointer;
+    font-size:12px;
+    font-weight:650;
   }
+  .btn:hover{ background:#141a2a; }
 
   .empty{
-    padding:30px;
-    text-align:center;
     color:var(--muted);
+    text-align:center;
+    padding:32px;
+  }
+
+  /* ✅ 모바일 반응형 */
+  @media (max-width: 980px){
+    .summary-grid{ grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+  @media (max-width: 720px){
+    .kpi .card{ flex: 1 1 calc(50% - 12px); min-width: 0; }
+    .summary-grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 460px){
+    .kpi .card{ flex: 1 1 100%; }
+    .summary-grid{ grid-template-columns: 1fr; }
+  }
+
+  /* ✅ 모바일에서 테이블 가로 스크롤 */
+  @media (max-width: 820px){
+    .table-wrap{ overflow:auto; }
+    table.main{ min-width: 920px; } /* 스크롤 생기게 */
   }
 </style>
 </head>
@@ -191,11 +322,30 @@
   <h1>IT 자산 관리 대시보드</h1>
 
   <div class="kpi">
-    <div class="card active" id="card-total" data-kind="total"><div class="label"><span class="dot"></span>총 자산</div><div class="n" id="k-total">0</div></div>
-    <div class="card" id="card-in" data-kind="in"><div class="label"><span class="dot"></span>IN</div><div class="n" id="k-in">0</div></div>
-    <div class="card" id="card-out" data-kind="out"><div class="label"><span class="dot"></span>OUT</div><div class="n" id="k-out">0</div></div>
-    <div class="card" id="card-repair" data-kind="repair"><div class="label"><span class="dot"></span>수리중</div><div class="n" id="k-repair">0</div></div>
-    <div class="card" id="card-retired" data-kind="retired"><div class="label"><span class="dot"></span>폐기</div><div class="n" id="k-retired">0</div></div>
+    <div class="card" id="card-total" data-kind="total">
+      <div class="label"><span class="dot"></span>총 자산</div>
+      <div class="n" id="k-total">0</div>
+    </div>
+
+    <div class="card" id="card-in" data-kind="in">
+      <div class="label"><span class="dot"></span>IN</div>
+      <div class="n" id="k-in">0</div>
+    </div>
+
+    <div class="card" id="card-out" data-kind="out">
+      <div class="label"><span class="dot"></span>OUT</div>
+      <div class="n" id="k-out">0</div>
+    </div>
+
+    <div class="card" id="card-repair" data-kind="repair">
+      <div class="label"><span class="dot"></span>수리중</div>
+      <div class="n" id="k-repair">0</div>
+    </div>
+
+    <div class="card" id="card-retired" data-kind="retired">
+      <div class="label"><span class="dot"></span>폐기</div>
+      <div class="n" id="k-retired">0</div>
+    </div>
   </div>
 
   <div class="summary" id="summary"></div>
@@ -212,11 +362,17 @@
   </div>
 
   <div class="table-wrap">
-    <table>
+    <table class="main">
       <thead>
         <tr>
-          <th>#</th><th>구분</th><th>모델명</th><th>시리얼</th>
-          <th>사용자</th><th>구매일</th><th>상태</th><th>인쇄</th>
+          <th style="width:70px">#</th>
+          <th style="width:120px">구분</th>
+          <th>모델명</th>
+          <th style="width:170px">시리얼</th>
+          <th style="width:150px">사용자</th>
+          <th style="width:140px">구매일</th>
+          <th style="width:130px">상태</th>
+          <th style="width:110px">인쇄</th>
         </tr>
       </thead>
       <tbody id="tbody"></tbody>
@@ -228,92 +384,284 @@
 
 <script>
 async function main(){
-  const res = await fetch('assets.json',{cache:'no-store'});
+  const res = await fetch('assets.json', {cache:'no-store'});
   const issues = await res.json();
 
-  function pick(b,r){const m=b.match(r);return m?m[1].trim():'-';}
-  function labelsToKey(l){
-    if(l.includes('in'))return'in';
-    if(l.includes('out'))return'out';
-    if(l.includes('repair'))return'repair';
-    if(l.includes('retired'))return'retired';
-    return'unknown';
-  }
-  function icon(type){
-    const t=type.toLowerCase();
-    if(t.includes('노트북'))return'💻';
-    if(t.includes('모니터'))return'🖥️';
-    if(t.includes('모바일'))return'📱';   // ✅ 모바일 추가
-    return'📦';
+  // 요약 클릭으로 적용되는 구분 필터
+  let activeTypeFilter = '';
+
+  function pick(body, r){
+    const m = body.match(r);
+    return m ? m[1].trim() : '-';
   }
 
-  const assets=issues.map(i=>{
-    const body=i.body||'';
-    const labels=(i.labels||[]).map(l=>l.toLowerCase());
-    const key=labelsToKey(labels);
-    return{
-      number:i.number,
-      type:pick(body,/구분:\s*(.+)/),
-      model:i.title||'-',
-      serial:pick(body,/시리얼:\s*(.+)/),
-      user:pick(body,/사용자:\s*(.+)/),
-      buy:pick(body,/구매일:\s*([0-9\-\.]+)/).replace(/\./g,'-'),
-      key,
-      text:{in:'IN',out:'OUT',repair:'수리중',retired:'폐기',unknown:'미지정'}[key],
-      hay:(i.title+body).toLowerCase()
+  function normalizeLabels(rawLabels){
+    return (rawLabels || []).map(l => {
+      if (typeof l === 'string') return l.toLowerCase();
+      if (l && typeof l === 'object' && l.name) return String(l.name).toLowerCase();
+      return '';
+    }).filter(Boolean);
+  }
+
+  function labelsToKey(labels){
+    if (labels.includes('in')) return 'in';
+    if (labels.includes('out')) return 'out';
+    if (labels.includes('repair')) return 'repair';
+    if (labels.includes('retired')) return 'retired';
+    return 'unknown';
+  }
+
+  function keyToText(key){
+    if (key === 'in') return 'IN';
+    if (key === 'out') return 'OUT';
+    if (key === 'repair') return '수리중';
+    if (key === 'retired') return '폐기';
+    return '미지정';
+  }
+
+  function keyToBadgeClass(key){
+    if (key === 'in') return 'st-in';
+    if (key === 'out') return 'st-out';
+    if (key === 'repair') return 'st-repair';
+    if (key === 'retired') return 'st-retired';
+    return 'st-unknown';
+  }
+
+  function typeIcon(type){
+    const t = String(type || '').toLowerCase();
+    if (t.includes('노트북') || t.includes('laptop')) return '💻';
+    if (t.includes('모니터') || t.includes('monitor')) return '🖥️';
+    if (t.includes('데스크탑') || t.includes('desktop') || t.includes('pc')) return '🧠';
+    if (t.includes('프린터') || t.includes('printer')) return '🖨️';
+    return '📦';
+  }
+
+  const assets = issues.map(i=>{
+    const body = i.body || '';
+    const labels = normalizeLabels(i.labels);
+    const stateKey = labelsToKey(labels);
+
+    return {
+      number: i.number,
+      type: pick(body, /구분:\s*(.+)/),
+      model: i.title || '-',
+      serial: pick(body, /시리얼:\s*(.+)/),
+      user: pick(body, /사용자:\s*(.+)/),
+      buy: pick(body, /구매일:\s*([0-9\-\.]+)/).replace(/\./g,'-'),
+      stateKey,
+      stateText: keyToText(stateKey),
+      hay: (body + ' ' + (i.title||'') + ' ' + labels.join(' ')).toLowerCase()
     };
   });
 
   // KPI
-  k('k-total',assets.length);
-  k('k-in',assets.filter(a=>a.key==='in').length);
-  k('k-out',assets.filter(a=>a.key==='out').length);
-  k('k-repair',assets.filter(a=>a.key==='repair').length);
-  k('k-retired',assets.filter(a=>a.key==='retired').length);
+  setText('k-total', assets.length);
+  setText('k-in', assets.filter(a=>a.stateKey==='in').length);
+  setText('k-out', assets.filter(a=>a.stateKey==='out').length);
+  setText('k-repair', assets.filter(a=>a.stateKey==='repair').length);
+  setText('k-retired', assets.filter(a=>a.stateKey==='retired').length);
 
-  const tbody=el('tbody'), empty=el('empty'), summary=el('summary');
+  const tbody = el('tbody');
+  const empty = el('empty');
+  const summary = el('summary');
 
-  function renderSummary(){
-    const map={};
-    assets.forEach(a=>{map[a.type]=(map[a.type]||0)+1;});
-    summary.innerHTML=`<h2>전체 자산 현황</h2>
-      <div class="summary-grid">
-        ${Object.keys(map).map(t=>`
-          <div class="type-card">
-            <div class="type-left">
-              <div class="typeicon">${icon(t)}</div>
-              <div>${t}</div>
-            </div>
-            <div class="typecount">${map[t]}</div>
-          </div>`).join('')}
-      </div>`;
+  function getActiveMode(){
+    const modes = ['total','in','out','repair','retired'];
+    for (const m of modes){
+      if (el('card-'+m).classList.contains('active')) return m;
+    }
+    return 'total';
   }
 
-  function render(){
-    const q=el('q').value.toLowerCase();
-    const st=el('status').value;
-    const rows=assets.filter(a=>(!q||a.hay.includes(q))&&(!st||a.key===st));
-    tbody.innerHTML=rows.map(a=>`
+  function renderSummary(modeKey){
+    let title = '전체 자산 현황';
+    let list = assets;
+
+    if (modeKey !== 'total'){
+      const nameMap = { in:'IN', out:'OUT', repair:'수리중', retired:'폐기' };
+      title = (nameMap[modeKey] || modeKey) + ' 자산 현황';
+      list = assets.filter(a => a.stateKey === modeKey);
+    }
+
+    // 구분별 수량 집계
+    const map = {};
+    for (const a of list){
+      const t = a.type || '-';
+      map[t] = (map[t] || 0) + 1;
+    }
+    const types = Object.keys(map).sort();
+
+    const filterUI = activeTypeFilter
+      ? `<span class="pill">필터: ${escapeHtml(activeTypeFilter)}</span>
+         <button class="linkbtn" id="btn-clear-type">필터 해제</button>`
+      : '';
+
+    if (!types.length){
+      summary.innerHTML = `
+        <div class="summary-head">
+          <h2>${escapeHtml(title)}</h2>
+          <div style="display:flex;gap:10px;align-items:center;">${filterUI}</div>
+        </div>
+        <div class="hint">해당 상태에 해당하는 자산이 없습니다.</div>
+      `;
+      bindClear();
+      return;
+    }
+
+    const cards = types.map(t => {
+      const active = (String(activeTypeFilter) === String(t)) ? 'active' : '';
+      return `
+        <div class="type-card ${active}" data-type="${escapeAttr(t)}">
+          <div class="type-left">
+            <div class="typeicon">${typeIcon(t)}</div>
+            <div class="typename">${escapeHtml(t)}</div>
+          </div>
+          <div class="typecount">${map[t]}</div>
+        </div>
+      `;
+    }).join('');
+
+    summary.innerHTML = `
+      <div class="summary-head">
+        <h2>${escapeHtml(title)}</h2>
+        <div style="display:flex;gap:10px;align-items:center;">${filterUI}</div>
+      </div>
+      <div class="summary-grid" id="summary-grid">
+        ${cards}
+      </div>
+    `;
+
+    // 카드 클릭 -> 구분 필터 적용
+    const grid = el('summary-grid');
+    if (grid){
+      grid.querySelectorAll('.type-card[data-type]').forEach(card=>{
+        card.addEventListener('click', ()=>{
+          const t = card.getAttribute('data-type') || '';
+          activeTypeFilter = t;
+
+          // 사용자가 현재 필터를 체감하게 검색창에도 표시
+          el('q').value = t;
+
+          renderTable();
+          renderSummary(modeKey);
+        });
+      });
+    }
+
+    bindClear();
+  }
+
+  function bindClear(){
+    const btn = document.getElementById('btn-clear-type');
+    if (btn){
+      btn.addEventListener('click', (e)=>{
+        e.preventDefault();
+        activeTypeFilter = '';
+        el('q').value = '';
+        renderTable();
+        renderSummary(getActiveMode());
+      });
+    }
+  }
+
+  function renderTable(){
+    const q = el('q').value.trim().toLowerCase();
+    const st = el('status').value;
+
+    const rows = assets.filter(a => {
+      const qHit = !q || a.hay.includes(q);
+      const stHit = !st || a.stateKey === st;
+      const typeHit = !activeTypeFilter || (String(a.type || '') === String(activeTypeFilter));
+      return qHit && stHit && typeHit;
+    });
+
+    tbody.innerHTML = rows.map(a => `
       <tr>
-        <td>${a.number}</td><td>${a.type}</td><td>${a.model}</td><td>${a.serial}</td>
-        <td>${a.user}</td><td>${a.buy}</td>
-        <td><span class="badge st-${a.key}">${a.text}</span></td>
-        <td><button class="btn" onclick="window.print()">인쇄</button></td>
-      </tr>`).join('');
-    empty.style.display=rows.length?'none':'block';
+        <td>${a.number}</td>
+        <td>${escapeHtml(a.type)}</td>
+        <td>${escapeHtml(a.model)}</td>
+        <td>${escapeHtml(a.serial)}</td>
+        <td>${escapeHtml(a.user)}</td>
+        <td>${escapeHtml(a.buy)}</td>
+        <td><span class="badge ${keyToBadgeClass(a.stateKey)}">${escapeHtml(a.stateText)}</span></td>
+        <td><button class="btn" onclick="printAsset('${escapeAttr(a.model)}','${escapeAttr(a.serial)}','${escapeAttr(a.user)}','${escapeAttr(a.buy)}')">인쇄</button></td>
+      </tr>
+    `).join('');
+
+    empty.style.display = rows.length ? 'none' : 'block';
   }
 
-  el('q').oninput=render;
-  el('status').onchange=render;
+  function setActive(modeKey){
+    ['total','in','out','repair','retired'].forEach(k => el('card-'+k).classList.remove('active'));
+    el('card-'+modeKey).classList.add('active');
+  }
 
-  renderSummary();
-  render();
+  el('card-total').addEventListener('click', ()=>{ setActive('total'); renderSummary('total'); });
+  el('card-in').addEventListener('click', ()=>{ setActive('in'); renderSummary('in'); });
+  el('card-out').addEventListener('click', ()=>{ setActive('out'); renderSummary('out'); });
+  el('card-repair').addEventListener('click', ()=>{ setActive('repair'); renderSummary('repair'); });
+  el('card-retired').addEventListener('click', ()=>{ setActive('retired'); renderSummary('retired'); });
+
+  el('q').addEventListener('input', renderTable);
+  el('status').addEventListener('change', renderTable);
+
+  setActive('total');
+  renderSummary('total');
+  renderTable();
 }
 
-function el(id){return document.getElementById(id);}
-function k(id,v){el(id).textContent=v;}
+function el(id){ return document.getElementById(id); }
+function setText(id, v){ el(id).textContent = v; }
 
-main();
+function printAsset(model, serial, user, buy){
+  const w = window.open('', '_blank', 'width=520,height=420');
+  if (!w) return;
+
+  w.document.write(`
+    <html>
+    <head>
+      <title>자산 인쇄</title>
+      <style>
+        body{font-family:sans-serif;padding:24px;}
+        h2{margin:0 0 14px;}
+        p{margin:6px 0;}
+        .card{border:1px solid #ddd;border-radius:10px;padding:16px;}
+        button{margin-top:12px;padding:8px 12px;border-radius:8px;border:1px solid #bbb;background:#fff;cursor:pointer;}
+      </style>
+    </head>
+    <body>
+      <div class="card">
+        <h2>IT 자산 정보</h2>
+        <p><strong>모델명:</strong> ${escapeHtml(model)}</p>
+        <p><strong>시리얼:</strong> ${escapeHtml(serial)}</p>
+        <p><strong>사용자:</strong> ${escapeHtml(user)}</p>
+        <p><strong>구매일:</strong> ${escapeHtml(buy)}</p>
+        <button onclick="window.print()">인쇄</button>
+      </div>
+    </body>
+    </html>
+  `);
+  w.document.close();
+}
+
+function escapeHtml(s){
+  return String(s ?? '')
+    .replaceAll('&','&amp;')
+    .replaceAll('<','&lt;')
+    .replaceAll('>','&gt;')
+    .replaceAll('"','&quot;')
+    .replaceAll("'","&#39;");
+}
+function escapeAttr(s){
+  return String(s ?? '')
+    .replaceAll('\\','\\\\')
+    .replaceAll("'","\\'")
+    .replaceAll('"','&quot;')
+    .replaceAll('<','&lt;')
+    .replaceAll('>','&gt;');
+}
+
+main().catch(e => console.error(e));
 </script>
 </body>
 </html>
