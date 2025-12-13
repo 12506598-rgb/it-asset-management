@@ -20,30 +20,30 @@
     --c-retired:#ef4444;
   }
 
-  body {
+  body{
     margin:0;
     font-family: system-ui, -apple-system, Segoe UI, Roboto;
     background:var(--bg);
     color:var(--text);
   }
 
-  .wrap {
+  .wrap{
     max-width:1100px;
     margin:26px auto;
     padding:0 16px;
   }
 
-  h1 { margin:0 0 14px; letter-spacing:-.2px; }
+  h1{ margin:0 0 14px; letter-spacing:-.2px; }
 
   /* KPI */
-  .kpi {
+  .kpi{
     display:flex;
     gap:12px;
     margin:0 0 14px;
     flex-wrap:wrap;
   }
 
-  .kpi .card {
+  .kpi .card{
     background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,0));
     border:1px solid var(--line);
     border-radius:14px;
@@ -60,7 +60,7 @@
     box-shadow: 0 10px 26px rgba(0,0,0,.28);
   }
 
-  .kpi .label {
+  .kpi .label{
     display:flex;
     align-items:center;
     gap:8px;
@@ -75,7 +75,7 @@
     box-shadow: 0 0 0 2px rgba(255,255,255,.03) inset;
   }
 
-  .kpi .n {
+  .kpi .n{
     font-size:22px;
     font-weight:800;
     margin-top:8px;
@@ -100,11 +100,11 @@
 
   /* 요약 */
   .summary{
-    margin: 0 0 14px;
-    background: var(--card);
+    margin:0 0 14px;
+    background:var(--card);
     border:1px solid var(--line);
     border-radius:14px;
-    padding:12px 14px;
+    padding:12px 14px 14px;
   }
 
   .summary-head{
@@ -112,7 +112,7 @@
     align-items:center;
     justify-content:space-between;
     gap:12px;
-    margin: 0 0 10px;
+    margin:0 0 12px;
   }
 
   .summary h2{
@@ -132,7 +132,6 @@
     color:#dbe2ef;
     font-size:12px;
     font-weight:650;
-    cursor:default;
   }
 
   .linkbtn{
@@ -147,82 +146,89 @@
   }
   .linkbtn:hover{ background:#141a2a; }
 
-  /* ✅ 요약 표를 가운데로 모으기 */
-  .summary-inner{
-    max-width: 760px;      /* 핵심: 폭 제한 */
-    margin: 0 auto;        /* 가운데 정렬 */
+  /* ✅ 요약을 카드형(박스)으로 */
+  .summary-grid{
+    display:grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap:10px;
   }
 
-  .summary table{
-    width:100%;
-    border-collapse:collapse;
-    table-layout: fixed;
+  .type-card{
+    border:1px solid rgba(255,255,255,.10);
+    background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,0));
+    border-radius:14px;
+    padding:12px 12px;
+    cursor:pointer;
+    transition: transform .08s ease, border-color .15s ease, box-shadow .15s ease;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    min-width:0;
   }
-  .summary th, .summary td{
-    padding:10px 10px;
-    border-bottom:1px solid var(--line);
-    font-size:13px;
+  .type-card:hover{
+    transform: translateY(-1px);
+    border-color: rgba(255,255,255,.18);
+    box-shadow: 0 10px 26px rgba(0,0,0,.26);
   }
-  .summary th{
-    background:#121620;
-    font-weight:650;
+  .type-card.active{
+    border-color: rgba(96,165,250,.55);
+    box-shadow: 0 0 0 1px rgba(96,165,250,.45), 0 10px 26px rgba(0,0,0,.26);
   }
 
-  .summary th.type { width: 72%; }
-  .summary th.qty { width: 28%; text-align:right; }
-  .summary td.qty { text-align:right; }
-
-  .typecell{
+  .type-left{
     display:flex;
     align-items:center;
     gap:10px;
     min-width:0;
   }
   .typeicon{
-    width:28px;
-    height:28px;
-    border-radius:10px;
+    width:30px;
+    height:30px;
+    border-radius:12px;
     border:1px solid rgba(255,255,255,.10);
     background: rgba(255,255,255,.03);
     display:flex;
     align-items:center;
     justify-content:center;
-    font-size:15px;
+    font-size:16px;
     flex: 0 0 auto;
   }
   .typename{
+    font-weight:750;
+    color:#e6ebf5;
     overflow:hidden;
     text-overflow:ellipsis;
     white-space:nowrap;
-    font-weight:650;
-    color:#e6ebf5;
+  }
+  .typecount{
+    padding:6px 10px;
+    border-radius:12px;
+    border:1px solid rgba(255,255,255,.10);
+    background: rgba(0,0,0,.22);
+    font-weight:900;
+    letter-spacing:-.2px;
+    flex: 0 0 auto;
+    min-width:40px;
+    text-align:center;
   }
 
-  /* ✅ 요약 행 클릭 가능하게 */
-  .summary tbody tr {
-    cursor:pointer;
-    transition: background .12s ease;
-  }
-  .summary tbody tr:hover{
-    background: rgba(96,165,250,.06);
-  }
-
-  .summary .hint{
+  .hint{
     color:var(--muted);
     font-size:13px;
-    padding:10px 2px 2px;
+    padding:6px 2px 2px;
     text-align:center;
   }
 
   /* 필터 */
-  .toolbar {
+  .toolbar{
     display:flex;
     gap:12px;
     flex-wrap:wrap;
     margin:0 0 14px;
   }
 
-  input, select {
+  input, select{
     background:#0b0e14;
     color:var(--text);
     border:1px solid var(--line);
@@ -230,46 +236,49 @@
     padding:10px 12px;
   }
 
-  /* 테이블 */
-  table.main {
-    width:100%;
-    border-collapse:collapse;
-    background:var(--card);
+  /* 테이블(데스크톱) */
+  .table-wrap{
     border:1px solid var(--line);
     border-radius:14px;
     overflow:hidden;
+    background:var(--card);
   }
 
-  table.main th, table.main td {
+  table.main{
+    width:100%;
+    border-collapse:collapse;
+  }
+
+  table.main th, table.main td{
     padding:12px;
     border-bottom:1px solid var(--line);
     vertical-align: middle;
   }
 
-  table.main th {
+  table.main th{
     background:#121620;
     font-weight:650;
   }
 
-  table.main tr:hover { background:#0f1420; }
+  table.main tr:hover{ background:#0f1420; }
 
   /* 상태 배지 */
-  .badge {
+  .badge{
     display:inline-block;
     padding:4px 10px;
     border-radius:999px;
     font-size:12px;
     font-weight:800;
     color:#fff;
-    line-height: 1.1;
+    line-height:1.1;
   }
-  .st-in { background:#16a34a; }
-  .st-out { background:#f97316; }
-  .st-repair { background:#6b7280; }
-  .st-retired { background:#dc2626; }
-  .st-unknown { background:#374151; }
+  .st-in{ background:#16a34a; }
+  .st-out{ background:#f97316; }
+  .st-repair{ background:#6b7280; }
+  .st-retired{ background:#dc2626; }
+  .st-unknown{ background:#374151; }
 
-  .btn {
+  .btn{
     padding:6px 10px;
     border-radius:12px;
     border:1px solid var(--line);
@@ -279,12 +288,31 @@
     font-size:12px;
     font-weight:650;
   }
-  .btn:hover { background:#141a2a; }
+  .btn:hover{ background:#141a2a; }
 
-  .empty {
+  .empty{
     color:var(--muted);
     text-align:center;
     padding:32px;
+  }
+
+  /* ✅ 모바일 반응형 */
+  @media (max-width: 980px){
+    .summary-grid{ grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+  @media (max-width: 720px){
+    .kpi .card{ flex: 1 1 calc(50% - 12px); min-width: 0; }
+    .summary-grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 460px){
+    .kpi .card{ flex: 1 1 100%; }
+    .summary-grid{ grid-template-columns: 1fr; }
+  }
+
+  /* ✅ 모바일에서 테이블 가로 스크롤 */
+  @media (max-width: 820px){
+    .table-wrap{ overflow:auto; }
+    table.main{ min-width: 920px; } /* 스크롤 생기게 */
   }
 </style>
 </head>
@@ -333,21 +361,23 @@
     </select>
   </div>
 
-  <table class="main">
-    <thead>
-      <tr>
-        <th style="width:70px">#</th>
-        <th style="width:120px">구분</th>
-        <th>모델명</th>
-        <th style="width:170px">시리얼</th>
-        <th style="width:150px">사용자</th>
-        <th style="width:140px">구매일</th>
-        <th style="width:130px">상태</th>
-        <th style="width:110px">인쇄</th>
-      </tr>
-    </thead>
-    <tbody id="tbody"></tbody>
-  </table>
+  <div class="table-wrap">
+    <table class="main">
+      <thead>
+        <tr>
+          <th style="width:70px">#</th>
+          <th style="width:120px">구분</th>
+          <th>모델명</th>
+          <th style="width:170px">시리얼</th>
+          <th style="width:150px">사용자</th>
+          <th style="width:140px">구매일</th>
+          <th style="width:130px">상태</th>
+          <th style="width:110px">인쇄</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
 
   <div class="empty" id="empty" style="display:none;">표시할 자산이 없습니다.</div>
 </div>
@@ -357,7 +387,7 @@ async function main(){
   const res = await fetch('assets.json', {cache:'no-store'});
   const issues = await res.json();
 
-  // ✅ 요약 클릭용: 현재 선택된 구분 필터
+  // 요약 클릭으로 적용되는 구분 필터
   let activeTypeFilter = '';
 
   function pick(body, r){
@@ -435,6 +465,14 @@ async function main(){
   const empty = el('empty');
   const summary = el('summary');
 
+  function getActiveMode(){
+    const modes = ['total','in','out','repair','retired'];
+    for (const m of modes){
+      if (el('card-'+m).classList.contains('active')) return m;
+    }
+    return 'total';
+  }
+
   function renderSummary(modeKey){
     let title = '전체 자산 현황';
     let list = assets;
@@ -445,66 +483,60 @@ async function main(){
       list = assets.filter(a => a.stateKey === modeKey);
     }
 
+    // 구분별 수량 집계
     const map = {};
     for (const a of list){
       const t = a.type || '-';
       map[t] = (map[t] || 0) + 1;
     }
-
     const types = Object.keys(map).sort();
 
-    const filterPill = activeTypeFilter
-      ? `<span class="pill">필터: ${escapeHtml(activeTypeFilter)} <button class="linkbtn" style="margin-left:8px" id="btn-clear-type">필터 해제</button></span>`
+    const filterUI = activeTypeFilter
+      ? `<span class="pill">필터: ${escapeHtml(activeTypeFilter)}</span>
+         <button class="linkbtn" id="btn-clear-type">필터 해제</button>`
       : '';
 
     if (!types.length){
       summary.innerHTML = `
         <div class="summary-head">
           <h2>${escapeHtml(title)}</h2>
-          ${filterPill}
+          <div style="display:flex;gap:10px;align-items:center;">${filterUI}</div>
         </div>
         <div class="hint">해당 상태에 해당하는 자산이 없습니다.</div>
       `;
-      bindClearTypeIfNeeded();
+      bindClear();
       return;
     }
 
-    const rows = types.map(t => `
-      <tr data-type="${escapeAttr(t)}">
-        <td>
-          <div class="typecell">
+    const cards = types.map(t => {
+      const active = (String(activeTypeFilter) === String(t)) ? 'active' : '';
+      return `
+        <div class="type-card ${active}" data-type="${escapeAttr(t)}">
+          <div class="type-left">
             <div class="typeicon">${typeIcon(t)}</div>
             <div class="typename">${escapeHtml(t)}</div>
           </div>
-        </td>
-        <td class="qty">${map[t]}</td>
-      </tr>
-    `).join('');
+          <div class="typecount">${map[t]}</div>
+        </div>
+      `;
+    }).join('');
 
     summary.innerHTML = `
       <div class="summary-head">
         <h2>${escapeHtml(title)}</h2>
-        ${filterPill}
+        <div style="display:flex;gap:10px;align-items:center;">${filterUI}</div>
       </div>
-      <div class="summary-inner">
-        <table>
-          <thead>
-            <tr>
-              <th class="type">구분</th>
-              <th class="qty">수량</th>
-            </tr>
-          </thead>
-          <tbody id="summary-body">${rows}</tbody>
-        </table>
+      <div class="summary-grid" id="summary-grid">
+        ${cards}
       </div>
     `;
 
-    // ✅ 요약 행 클릭 -> 아래 테이블 구분 필터
-    const sb = el('summary-body');
-    if (sb){
-      sb.querySelectorAll('tr[data-type]').forEach(tr=>{
-        tr.addEventListener('click', ()=>{
-          const t = tr.getAttribute('data-type') || '';
+    // 카드 클릭 -> 구분 필터 적용
+    const grid = el('summary-grid');
+    if (grid){
+      grid.querySelectorAll('.type-card[data-type]').forEach(card=>{
+        card.addEventListener('click', ()=>{
+          const t = card.getAttribute('data-type') || '';
           activeTypeFilter = t;
 
           // 사용자가 현재 필터를 체감하게 검색창에도 표시
@@ -516,10 +548,10 @@ async function main(){
       });
     }
 
-    bindClearTypeIfNeeded();
+    bindClear();
   }
 
-  function bindClearTypeIfNeeded(){
+  function bindClear(){
     const btn = document.getElementById('btn-clear-type');
     if (btn){
       btn.addEventListener('click', (e)=>{
@@ -527,20 +559,9 @@ async function main(){
         activeTypeFilter = '';
         el('q').value = '';
         renderTable();
-
-        // 현재 활성 KPI 기준으로 요약 재렌더
-        const mode = getActiveMode();
-        renderSummary(mode);
+        renderSummary(getActiveMode());
       });
     }
-  }
-
-  function getActiveMode(){
-    const modes = ['total','in','out','repair','retired'];
-    for (const m of modes){
-      if (el('card-'+m).classList.contains('active')) return m;
-    }
-    return 'total';
   }
 
   function renderTable(){
@@ -581,11 +602,7 @@ async function main(){
   el('card-repair').addEventListener('click', ()=>{ setActive('repair'); renderSummary('repair'); });
   el('card-retired').addEventListener('click', ()=>{ setActive('retired'); renderSummary('retired'); });
 
-  el('q').addEventListener('input', ()=>{
-    // 검색을 직접 바꾸면 “구분 고정 필터”는 유지하되, 사용자가 원치 않으면 해제 가능
-    renderTable();
-  });
-
+  el('q').addEventListener('input', renderTable);
   el('status').addEventListener('change', renderTable);
 
   setActive('total');
